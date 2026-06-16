@@ -13,6 +13,7 @@ const App = {
         training: TrainingPage,
         maintenance: MaintenancePage,
         spare: SparePage,
+        disposal: DisposalPage,
         simulation: SimulationPage
     },
 
@@ -94,6 +95,7 @@ const App = {
             training: '培训资质管理',
             maintenance: '维修工单',
             spare: '备件管理',
+            disposal: '不合格品处置',
             simulation: '数据模拟'
         };
         document.getElementById('pageTitle').textContent = titles[page] || page;

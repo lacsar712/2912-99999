@@ -22,6 +22,11 @@ from .safety import (
     RectificationRecord,
     AccidentRecord
 )
+from .disposal import (
+    DisposalOrder,
+    DisposalApproval,
+    DisposalResult
+)
 
 __all__ = [
     'BaseModel',
@@ -40,5 +45,8 @@ __all__ = [
     'InspectionTask',
     'HazardRecord',
     'RectificationRecord',
-    'AccidentRecord'
+    'AccidentRecord',
+    'DisposalOrder',
+    'DisposalApproval',
+    'DisposalResult'
 ]
