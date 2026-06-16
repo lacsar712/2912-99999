@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册功能诊断</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .step {
+            background: #e3f2fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+        }
+        .code {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        .error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        .success {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        #result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            min-height: 100px;
+        }
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .check-item:last-child {
+            border-bottom: none;
+        }
+        .icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 注册功能诊断工具</h1>
+    
+    <div class="card">
+        <h2>第一步：检查基础组件</h2>
+        <button onclick="checkComponents()">🔍 检查组件</button>
+        <div id="componentsResult"></div>
+    </div>
+    
+    <div class="card">
+        <h2>第二步：检查DOM元素</h2>
+        <button onclick="checkDOM()">🔍 检查DOM</button>
+        <div id="domResult"></div>
+    </div>
+    
+    <div class="card">
+        <h2>第三步：测试注册功能</h2>
+        <button onclick="testRegister()">🧪 测试注册</button>
+        <div id="registerResult"></div>
+    </div>
+    
+    <div class="card">
+        <h2>第四步：查看控制台错误</h2>
+        <div class="step warning">
+            <strong>⚠️ 重要：</strong>请打开浏览器开发者工具（F12），查看Console标签页是否有红色错误信息。
+        </div>
+        <div id="consoleErrors"></div>
+    </div>
+    
+    <div class="card">
+        <h2>快速测试</h2>
+        <div class="step">
+            <strong>在登录页面的浏览器控制台中执行以下代码：</strong>
+        </div>
+        <div class="code">
+// 复制以下代码到浏览器控制台（F12 -> Console）
+
+// 1. 检查注册按钮是否存在
+const submitBtn = document.getElementById('submitRegister');
+console.log('注册按钮:', submitBtn);
+
+// 2. 检查Toast组件
+console.log('Toast:', typeof Toast);
+Toast.show('测试Toast', 'success');
+
+// 3. 手动触发注册
+async function testReg() {
+    const username = 'test' + Date.now();
+    console.log('测试用户名:', username);
+    
+    const resp = await AuthService.register({
+        username: username,
+        password: 'password123'
+    });
+    
+    console.log('注册响应:', resp);
+    Toast.show(resp.code === 201 ? '注册成功!' : resp.message, 
+               resp.code === 201 ? 'success' : 'error');
+}
+
+testReg();
+        </div>
+    </div>
+    
+    <script src="/js/config.js"></script>
+    <script src="/js/utils/request.js"></script>
+    <script src="/js/utils/storage.js"></script>
+    <script src="/js/utils/validator.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/services/auth.js"></script>
+    
+    <script>
+        function addResult(containerId, html) {
+            document.getElementById(containerId).innerHTML = html;
+        }
+        
+        function checkComponents() {
+            const checks = [];
+            
+            // 检查Config
+            if (typeof Config !== 'undefined') {
+                checks.push({ ok: true, name: 'Config对象', detail: `API_BASE_URL: ${Config.API_BASE_URL}` });
+            } else {
+                checks.push({ ok: false, name: 'Config对象', detail: '未定义' });
+            }
+            
+            // 检查Toast
+            if (typeof Toast !== 'undefined' && typeof Toast.show === 'function') {
+                checks.push({ ok: true, name: 'Toast组件', detail: 'show方法可用' });
+                Toast.show('Toast组件正常', 'success');
+            } else {
+                checks.push({ ok: false, name: 'Toast组件', detail: '未定义或show方法不存在' });
+            }
+            
+            // 检查Request
+            if (typeof Request !== 'undefined' && typeof Request.get === 'function') {
+                checks.push({ ok: true, name: 'Request对象', detail: 'get方法可用' });
+            } else {
+                checks.push({ ok: false, name: 'Request对象', detail: '未定义或get方法不存在' });
+            }
+            
+            // 检查AuthService
+            if (typeof AuthService !== 'undefined' && typeof AuthService.register === 'function') {
+                checks.push({ ok: true, name: 'AuthService', detail: 'register方法可用' });
+            } else {
+                checks.push({ ok: false, name: 'AuthService', detail: '未定义或register方法不存在' });
+            }
+            
+            // 检查Storage
+            if (typeof Storage !== 'undefined' && typeof Storage.getToken === 'function') {
+                checks.push({ ok: true, name: 'Storage对象', detail: 'getToken方法可用' });
+            } else {
+                checks.push({ ok: false, name: 'Storage对象', detail: '未定义或getToken方法不存在' });
+            }
+            
+            let html = '<div style="margin-top: 15px;">';
+            checks.forEach(check => {
+                html += `<div class="check-item">
+                    <span class="icon">${check.ok ? '✅' : '❌'}</span>
+                    <div>
+                        <strong>${check.name}</strong>
+                        <div style="color: #666; font-size: 13px;">${check.detail}</div>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            
+            const allOk = checks.every(c => c.ok);
+            if (allOk) {
+                html += '<div class="step success" style="margin-top: 15px;"><strong>✅ 所有组件正常</strong></div>';
+            } else {
+                html += '<div class="step error" style="margin-top: 15px;"><strong>❌ 部分组件异常，请检查JS文件是否正确加载</strong></div>';
+            }
+            
+            addResult('componentsResult', html);
+        }
+        
+        function checkDOM() {
+            const elements = [
+                { id: 'submitRegister', name: '注册按钮' },
+                { id: 'registerModal', name: '注册模态框' },
+                { id: 'registerForm', name: '注册表单' },
+                { id: 'regUsername', name: '用户名输入框' },
+                { id: 'regPassword', name: '密码输入框' },
+                { id: 'regConfirmPassword', name: '确认密码输入框' },
+                { id: 'regEmail', name: '邮箱输入框' },
+                { id: 'registerLink', name: '注册链接' }
+            ];
+            
+            let html = '<div style="margin-top: 15px;">';
+            elements.forEach(el => {
+                const elem = document.getElementById(el.id);
+                html += `<div class="check-item">
+                    <span class="icon">${elem ? '✅' : '❌'}</span>
+                    <div>
+                        <strong>${el.name}</strong>
+                        <div style="color: #666; font-size: 13px;">
+                            ${elem ? `ID: ${el.id}` : '未找到'}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            
+            addResult('domResult', html);
+            
+            // 特别检查注册按钮的事件监听器
+            const submitBtn = document.getElementById('submitRegister');
+            if (submitBtn) {
+                // 尝试模拟点击
+                html += '<div class="step" style="margin-top: 15px;">';
+                html += '<strong>注册按钮检查：</strong><br>';
+                html += `标签名: ${submitBtn.tagName}<br>`;
+                html += `文本内容: "${submitBtn.textContent}"<br>`;
+                html += `是否禁用: ${submitBtn.disabled}<br>`;
+                html += `onclick属性: ${submitBtn.onclick ? '已设置' : '未设置'}`;
+                html += '</div>';
+                addResult('domResult', html);
+            }
+        }
+        
+        async function testRegister() {
+            addResult('registerResult', '<div class="step">测试中...</div>');
+            
+            try {
+                // 测试用户名检查
+                const checkResp = await Request.get('/auth/check-username', { username: 'admin' });
+                
+                // 测试注册
+                const username = 'testuser' + Date.now();
+                const regResp = await AuthService.register({
+                    username: username,
+                    password: 'password123',
+                    email: 'test@example.com'
+                });
+                
+                let html = '<div style="margin-top: 15px;">';
+                
+                // 显示用户名检查结果
+                html += `<div class="check-item">
+                    <span class="icon">${checkResp.code === 200 ? '✅' : '❌'}</span>
+                    <div>
+                        <strong>用户名检查API</strong>
+                        <div style="color: #666; font-size: 13px;">
+                            状态: ${checkResp.code}<br>
+                            可用: ${checkResp.data?.available ? '是' : '否'}
+                        </div>
+                    </div>
+                </div>`;
+                
+                // 显示注册结果
+                html += `<div class="check-item">
+                    <span class="icon">${regResp.code === 201 ? '✅' : '❌'}</span>
+                    <div>
+                        <strong>注册API</strong>
+                        <div style="color: #666; font-size: 13px;">
+                            用户名: ${username}<br>
+                            状态: ${regResp.code}<br>
+                            消息: ${regResp.message}
+                        </div>
+                    </div>
+                </div>`;
+                
+                // 如果注册成功，测试登录
+                if (regResp.code === 201) {
+                    const loginResp = await AuthService.login(username, 'password123');
+                    html += `<div class="check-item">
+                        <span class="icon">${loginResp.code === 200 ? '✅' : '❌'}</span>
+                        <div>
+                            <strong>登录API</strong>
+                            <div style="color: #666; font-size: 13px;">
+                                状态: ${loginResp.code}<br>
+                                Token: ${loginResp.data?.token ? '已获取' : '未获取'}
+                            </div>
+                        </div>
+                    </div>`;
+                }
+                
+                html += '</div>';
+                
+                if (regResp.code === 201) {
+                    html += '<div class="step success" style="margin-top: 15px;"><strong>✅ 注册功能正常工作</strong></div>';
+                    Toast.show('注册功能正常!', 'success');
+                } else {
+                    html += '<div class="step error" style="margin-top: 15px;"><strong>❌ 注册失败: ' + regResp.message + '</strong></div>';
+                }
+                
+                addResult('registerResult', html);
+                
+            } catch (error) {
+                addResult('registerResult', `<div class="step error" style="margin-top: 15px;">
+                    <strong>❌ 测试出错</strong><br>
+                    错误信息: ${error.message}<br>
+                    <br>
+                    <strong>详细信息：</strong><br>
+                    ${error.stack || error.toString()}
+                </div>`);
+                console.error('测试错误:', error);
+            }
+        }
+        
+        // 页面加载后自动检查
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkComponents();
+                checkDOM();
+            }, 500);
+        });
+    </script>
+    
+    <!-- Toast容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+</body>
+</html>

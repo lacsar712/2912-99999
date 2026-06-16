@@ -1,0 +1,91 @@
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8085:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      - DB_TYPE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_LOCAL_PORT=3308
+      - DB_USER=root
+      - DB_PASSWORD=123456
+      - DB_NAME=production_system
+      - SECRET_KEY=your-secret-key-change-in-production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_LOCAL_PORT=6381
+      - LOG_LEVEL=INFO
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app-network
+    volumes:
+      - backend-logs:/app/logs
+    restart: unless-stopped
+
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=production_system
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p123456", "-D", "production_system", "-e", "SELECT COUNT(*) FROM production_line"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis缓存
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+# 网络配置
+networks:
+  app-network:
+    driver: bridge
+
+# 数据卷
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  backend-logs:
+    driver: local

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能生产线监控系统</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 生产线监控特定样式 */
+        :root {
+            --status-running: #28a745;
+            --status-stopped: #6c757d;
+            --status-error: #dc3545;
+            --status-maintenance: #ffc107;
+            --status-idle: #17a2b8;
+        }
+
+        .status-running { color: var(--status-running); }
+        .status-stopped { color: var(--status-stopped); }
+        .status-error { color: var(--status-error); }
+        .status-maintenance { color: var(--status-maintenance); }
+        .status-idle { color: var(--status-idle); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.running { background: rgba(40,167,69,0.1); color: var(--status-running); }
+        .status-badge.stopped { background: rgba(108,117,125,0.1); color: var(--status-stopped); }
+        .status-badge.error { background: rgba(220,53,69,0.1); color: var(--status-error); }
+        .status-badge.maintenance { background: rgba(255,193,7,0.1); color: #856404; }
+        .status-badge.idle { background: rgba(23,162,184,0.1); color: var(--status-idle); }
+
+        /* 实时数据卡片 */
+        .realtime-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sensor-value {
+            font-size: 32px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .sensor-unit {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* 甘特图样式 */
+        .gantt-container {
+            overflow-x: auto;
+        }
+
+        .gantt-bar {
+            height: 24px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        /* 告警列表 */
+        .alert-item {
+            padding: 12px;
+            border-left: 4px solid;
+            margin-bottom: 8px;
+            background: var(--bg-light);
+        }
+        .alert-item.warning { border-color: var(--warning-color); }
+        .alert-item.error { border-color: var(--danger-color); }
+        .alert-item.critical { border-color: #721c24; }
+
+        /* 设备卡片 */
+        .equipment-card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            transition: all 0.3s;
+        }
+        .equipment-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .equipment-card .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>生产线监控</h2>
+            <button class="sidebar-toggle" id="sidebarToggle">×</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">监控中心</span>
+            </a>
+            <a href="#" class="nav-item" data-page="production">
+                <span class="nav-icon">🏭</span>
+                <span class="nav-text">生产线</span>
+            </a>
+            <a href="#" class="nav-item" data-page="equipment">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">设备管理</span>
+            </a>
+            <a href="#" class="nav-item" data-page="tasks">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">生产任务</span>
+            </a>
+            <a href="#" class="nav-item" data-page="alerts">
+                <span class="nav-icon">🔔</span>
+                <span class="nav-text">告警中心</span>
+            </a>
+            <a href="#" class="nav-item" data-page="simulation">
+                <span class="nav-icon">🧪</span>
+                <span class="nav-text">数据模拟</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="header-title" id="pageTitle">监控中心</div>
+            <div class="header-user">
+                <span id="username">用户</span>
+                <button class="btn btn-sm btn-outline" id="logoutBtn">退出</button>
+            </div>
+        </header>
+
+        <!-- 页面内容区 -->
+        <div class="page-container" id="pageContainer"></div>
+    </main>
+
+    <!-- 模态框容器 -->
+    <div class="modal-container" id="modalContainer"></div>
+
+    <!-- 提示框容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="/js/config.js"></script>
+    <script src="/js/utils/request.js"></script>
+    <script src="/js/utils/storage.js"></script>
+    <script src="/js/utils/validator.js"></script>
+    <script src="/js/utils/formatter.js"></script>
+    <script src="/js/utils/export.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/table.js"></script>
+    <script src="/js/components/pagination.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/services/auth.js"></script>
+    <script src="/js/services/production.js"></script>
+    <script src="/js/services/simulation.js"></script>
+    <script src="/js/services/equipmentSimulation.js"></script>
+    <script src="/js/services/alert.js"></script>
+    <script src="/js/pages/monitor.js"></script>
+    <script src="/js/pages/production-line.js"></script>
+    <script src="/js/pages/equipment.js"></script>
+    <script src="/js/pages/tasks.js"></script>
+    <script src="/js/pages/alerts.js"></script>
+    <script src="/js/pages/simulation.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

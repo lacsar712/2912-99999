@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册功能自动化测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .test-header {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+        .test-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending {
+            background: #ffeaa7;
+            color: #d68910;
+        }
+        .status-running {
+            background: #74b9ff;
+            color: #0984e3;
+        }
+        .status-success {
+            background: #00b894;
+            color: white;
+        }
+        .status-error {
+            background: #d63031;
+            color: white;
+        }
+        .test-body {
+            padding: 20px;
+        }
+        .test-result {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .test-result.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .test-result.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .summary h2 {
+            margin-bottom: 10px;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .log-container {
+            margin-top: 20px;
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+        .log-info {
+            color: #61afef;
+        }
+        .log-success {
+            color: #98c379;
+        }
+        .log-error {
+            color: #e06c75;
+        }
+        .log-warning {
+            color: #e5c07b;
+        }
+        .timestamp {
+            color: #5c6370;
+            margin-right: 8px;
+        }
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 注册功能自动化测试</h1>
+            <p>全面测试前端注册功能的各个环节</p>
+        </div>
+        
+        <div class="content">
+            <div class="button-group">
+                <button class="btn-primary" id="startTest" onclick="runAllTests()">
+                    🚀 开始测试
+                </button>
+                <button class="btn-secondary" id="clearLog" onclick="clearLog()">
+                    🗑️ 清空日志
+                </button>
+            </div>
+            
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            
+            <!-- 测试项1: Toast组件 -->
+            <div class="test-section" id="test1">
+                <div class="test-header">
+                    <h3>1️⃣ Toast组件测试</h3>
+                    <span class="test-status status-pending" id="test1-status">待测试</span>
+                </div>
+                <div class="test-body">
+                    <div class="test-result" id="test1-result">等待测试...</div>
+                </div>
+            </div>
+            
+            <!-- 测试项2: Request对象 -->
+            <div class="test-section" id="test2">
+                <div class="test-header">
+                    <h3>2️⃣ Request对象测试</h3>
+                    <span class="test-status status-pending" id="test2-status">待测试</span>
+                </div>
+                <div class="test-body">
+                    <div class="test-result" id="test2-result">等待测试...</div>
+                </div>
+            </div>
+            
+            <!-- 测试项3: 用户名检查API -->
+            <div class="test-section" id="test3">
+                <div class="test-header">
+                    <h3>3️⃣ 用户名检查API测试</h3>
+                    <span class="test-status status-pending" id="test3-status">待测试</span>
+                </div>
+                <div class="test-body">
+                    <div class="test-result" id="test3-result">等待测试...</div>
+                </div>
+            </div>
+            
+            <!-- 测试项4: 注册API -->
+            <div class="test-section" id="test4">
+                <div class="test-header">
+                    <h3>4️⃣ 注册API测试</h3>
+                    <span class="test-status status-pending" id="test4-status">待测试</span>
+                </div>
+                <div class="test-body">
+                    <div class="test-result" id="test4-result">等待测试...</div>
+                </div>
+            </div>
+            
+            <!-- 测试项5: 登录API -->
+            <div class="test-section" id="test5">
+                <div class="test-header">
+                    <h3>5️⃣ 登录API测试</h3>
+                    <span class="test-status status-pending" id="test5-status">待测试</span>
+                </div>
+                <div class="test-body">
+                    <div class="test-result" id="test5-result">等待测试...</div>
+                </div>
+            </div>
+            
+            <!-- 测试总结 -->
+            <div class="summary" id="summary" style="display: none;">
+                <h2>📊 测试总结</h2>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="totalTests">5</span>
+                        <span class="stat-label">总测试数</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="passedTests">0</span>
+                        <span class="stat-label">通过</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="failedTests">0</span>
+                        <span class="stat-label">失败</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 日志容器 -->
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-info">
+                    <span class="timestamp">[系统]</span>
+                    测试系统已就绪，点击"开始测试"按钮运行测试
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引入必要的JS文件 -->
+    <script src="/js/config.js"></script>
+    <script src="/js/utils/request.js"></script>
+    <script src="/js/utils/storage.js"></script>
+    <script src="/js/utils/validator.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/services/auth.js"></script>
+    
+    <script>
+        let testResults = {
+            total: 5,
+            passed: 0,
+            failed: 0
+        };
+        let registeredUsername = null;
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span>${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('logContainer').innerHTML = '';
+            log('日志已清空', 'info');
+        }
+        
+        function updateTestStatus(testId, status, result) {
+            const statusElement = document.getElementById(`test${testId}-status`);
+            const resultElement = document.getElementById(`test${testId}-result`);
+            
+            // 更新状态
+            statusElement.className = `test-status status-${status}`;
+            const statusText = {
+                'pending': '待测试',
+                'running': '测试中',
+                'success': '通过',
+                'error': '失败'
+            };
+            statusElement.textContent = statusText[status];
+            
+            // 更新结果
+            resultElement.className = `test-result ${status === 'success' ? 'success' : status === 'error' ? 'error' : ''}`;
+            resultElement.textContent = result;
+        }
+        
+        function updateProgress(current, total) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.style.display = 'block';
+            const percentage = (current / total) * 100;
+            progressFill.style.width = percentage + '%';
+        }
+        
+        function showSummary() {
+            const summary = document.getElementById('summary');
+            summary.style.display = 'block';
+            document.getElementById('passedTests').textContent = testResults.passed;
+            document.getElementById('failedTests').textContent = testResults.failed;
+            
+            if (testResults.failed === 0) {
+                log('✅ 所有测试通过！注册功能完全正常！', 'success');
+            } else {
+                log(`⚠️ ${testResults.failed} 个测试失败，请检查相关功能`, 'warning');
+            }
+        }
+        
+        async function test1_ToastComponent() {
+            updateTestStatus(1, 'running', '测试中...');
+            log('开始测试Toast组件...', 'info');
+            
+            try {
+                if (typeof Toast === 'undefined') {
+                    throw new Error('Toast对象未定义');
+                }
+                if (typeof Toast.show !== 'function') {
+                    throw new Error('Toast.show方法不存在');
+                }
+                if (typeof Toast.success !== 'function') {
+                    throw new Error('Toast.success方法不存在');
+                }
+                if (typeof Toast.error !== 'function') {
+                    throw new Error('Toast.error方法不存在');
+                }
+                
+                // 测试Toast显示
+                Toast.show('Toast组件测试通过！', 'success');
+                
+                const result = `✅ Toast组件正常
+- Toast对象: 已定义
+- Toast.show: function
+- Toast.success: function
+- Toast.error: function`;
+                
+                updateTestStatus(1, 'success', result);
+                log('✅ Toast组件测试通过', 'success');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                const result = `❌ Toast组件测试失败
+错误: ${error.message}`;
+                updateTestStatus(1, 'error', result);
+                log(`❌ Toast组件测试失败: ${error.message}`, 'error');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        async function test2_RequestObject() {
+            updateTestStatus(2, 'running', '测试中...');
+            log('开始测试Request对象...', 'info');
+            
+            try {
+                if (typeof Request === 'undefined') {
+                    throw new Error('Request对象未定义');
+                }
+                if (typeof Request.get !== 'function') {
+                    throw new Error('Request.get方法不存在');
+                }
+                if (typeof Request.post !== 'function') {
+                    throw new Error('Request.post方法不存在');
+                }
+                if (typeof Request.request !== 'function') {
+                    throw new Error('Request.request方法不存在');
+                }
+                
+                const result = `✅ Request对象正常
+- Request对象: 已定义
+- Request.get: function
+- Request.post: function
+- Request.request: function
+- baseURL: ${Config.API_BASE_URL}`;
+                
+                updateTestStatus(2, 'success', result);
+                log('✅ Request对象测试通过', 'success');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                const result = `❌ Request对象测试失败
+错误: ${error.message}`;
+                updateTestStatus(2, 'error', result);
+                log(`❌ Request对象测试失败: ${error.message}`, 'error');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        async function test3_CheckUsernameAPI() {
+            updateTestStatus(3, 'running', '测试中...');
+            log('开始测试用户名检查API...', 'info');
+            
+            try {
+                // 测试已存在的用户名
+                const response1 = await Request.get('/auth/check-username', { username: 'admin' });
+                log(`检查已存在的用户名 'admin': ${JSON.stringify(response1)}`, 'info');
+                
+                if (response1.code !== 200) {
+                    throw new Error(`API返回错误: ${response1.message}`);
+                }
+                if (response1.data.available !== false) {
+                    throw new Error('已存在用户名应该返回available=false');
+                }
+                
+                // 测试不存在的用户名
+                const newUsername = 'testuser' + Date.now();
+                const response2 = await Request.get('/auth/check-username', { username: newUsername });
+                log(`检查新用户名 '${newUsername}': ${JSON.stringify(response2)}`, 'info');
+                
+                if (response2.code !== 200) {
+                    throw new Error(`API返回错误: ${response2.message}`);
+                }
+                if (response2.data.available !== true) {
+                    throw new Error('新用户名应该返回available=true');
+                }
+                
+                const result = `✅ 用户名检查API正常
+测试1 - 已存在用户名 (admin):
+  - available: false
+  - message: ${response1.data.message}
+
+测试2 - 新用户名 (${newUsername}):
+  - available: true
+  - message: ${response2.data.message}`;
+                
+                updateTestStatus(3, 'success', result);
+                log('✅ 用户名检查API测试通过', 'success');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                const result = `❌ 用户名检查API测试失败
+错误: ${error.message}`;
+                updateTestStatus(3, 'error', result);
+                log(`❌ 用户名检查API测试失败: ${error.message}`, 'error');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        async function test4_RegisterAPI() {
+            updateTestStatus(4, 'running', '测试中...');
+            log('开始测试注册API...', 'info');
+            
+            try {
+                // 生成唯一用户名
+                registeredUsername = 'testuser' + Date.now();
+                const email = `test${Date.now()}@example.com`;
+                
+                log(`尝试注册新用户: ${registeredUsername}`, 'info');
+                
+                const response = await AuthService.register({
+                    username: registeredUsername,
+                    password: 'password123',
+                    email: email
+                });
+                
+                log(`注册响应: ${JSON.stringify(response)}`, 'info');
+                
+                if (response.code !== 201 && response.code !== 200) {
+                    throw new Error(`注册失败: ${response.message}`);
+                }
+                
+                if (!response.data || !response.data.userId) {
+                    throw new Error('注册响应缺少userId');
+                }
+                
+                const result = `✅ 注册API正常
+用户名: ${registeredUsername}
+邮箱: ${email}
+密码: password123
+用户ID: ${response.data.userId}
+响应消息: ${response.message}`;
+                
+                updateTestStatus(4, 'success', result);
+                log('✅ 注册API测试通过', 'success');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                const result = `❌ 注册API测试失败
+错误: ${error.message}`;
+                updateTestStatus(4, 'error', result);
+                log(`❌ 注册API测试失败: ${error.message}`, 'error');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        async function test5_LoginAPI() {
+            updateTestStatus(5, 'running', '测试中...');
+            log('开始测试登录API...', 'info');
+            
+            try {
+                if (!registeredUsername) {
+                    throw new Error('没有可用的注册用户，跳过登录测试');
+                }
+                
+                log(`尝试登录用户: ${registeredUsername}`, 'info');
+                
+                const response = await AuthService.login(registeredUsername, 'password123');
+                
+                log(`登录响应: ${JSON.stringify(response)}`, 'info');
+                
+                if (response.code !== 200) {
+                    throw new Error(`登录失败: ${response.message}`);
+                }
+                
+                if (!response.data || !response.data.token) {
+                    throw new Error('登录响应缺少token');
+                }
+                
+                if (!response.data.userInfo) {
+                    throw new Error('登录响应缺少用户信息');
+                }
+                
+                // 验证token是否已存储
+                const storedToken = Storage.getToken();
+                if (!storedToken) {
+                    throw new Error('Token未正确存储');
+                }
+                
+                const result = `✅ 登录API正常
+用户名: ${response.data.userInfo.username}
+用户ID: ${response.data.userInfo.id}
+角色: ${response.data.userInfo.role}
+Token已存储: ${storedToken ? '是' : '否'}
+Token长度: ${response.data.token.length}字符`;
+                
+                updateTestStatus(5, 'success', result);
+                log('✅ 登录API测试通过', 'success');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                const result = `❌ 登录API测试失败
+错误: ${error.message}`;
+                updateTestStatus(5, 'error', result);
+                log(`❌ 登录API测试失败: ${error.message}`, 'error');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        async function runAllTests() {
+            // 重置测试结果
+            testResults = { total: 5, passed: 0, failed: 0 };
+            
+            // 禁用开始按钮
+            const startButton = document.getElementById('startTest');
+            startButton.disabled = true;
+            startButton.textContent = '⏳ 测试进行中...';
+            
+            log('========== 开始执行自动化测试 ==========', 'info');
+            
+            // 执行测试
+            await test1_ToastComponent();
+            updateProgress(1, 5);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await test2_RequestObject();
+            updateProgress(2, 5);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await test3_CheckUsernameAPI();
+            updateProgress(3, 5);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await test4_RegisterAPI();
+            updateProgress(4, 5);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await test5_LoginAPI();
+            updateProgress(5, 5);
+            
+            // 显示总结
+            showSummary();
+            
+            log('========== 测试完成 ==========', 'info');
+            
+            // 恢复按钮
+            startButton.disabled = false;
+            startButton.textContent = '🔄 重新测试';
+        }
+    </script>
+    
+    <!-- Toast容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+[
+  {
+    "equipment_id": 1,
+    "task_id": 1,
+    "product_count": 150,
+    "qualified_count": 145,
+    "defect_count": 5,
+    "yield_rate": 96.67,
+    "temperature": 45.2,
+    "humidity": 65.5,
+    "duration": 1800,
+    "efficiency": 92.5,
+    "record_time": "2024-01-15T08:00:00"
+  },
+  {
+    "equipment_id": 1,
+    "task_id": 1,
+    "product_count": 160,
+    "qualified_count": 155,
+    "defect_count": 5,
+    "yield_rate": 96.88,
+    "temperature": 46.1,
+    "humidity": 66.2,
+    "duration": 1800,
+    "efficiency": 93.2,
+    "record_time": "2024-01-15T08:30:00"
+  },
+  {
+    "equipment_id": 3,
+    "task_id": 2,
+    "product_count": 80,
+    "qualified_count": 78,
+    "defect_count": 2,
+    "yield_rate": 97.5,
+    "temperature": 54.8,
+    "humidity": 60.3,
+    "duration": 1200,
+    "efficiency": 95.0,
+    "record_time": "2024-01-15T09:00:00"
+  },
+  {
+    "equipment_id": 5,
+    "task_id": 3,
+    "product_count": 200,
+    "qualified_count": 195,
+    "defect_count": 5,
+    "yield_rate": 97.5,
+    "temperature": 48.5,
+    "humidity": 62.8,
+    "duration": 2100,
+    "efficiency": 91.8,
+    "record_time": "2024-01-15T09:30:00"
+  },
+  {
+    "equipment_id": 12,
+    "task_id": 5,
+    "product_count": 120,
+    "qualified_count": 118,
+    "defect_count": 2,
+    "yield_rate": 98.33,
+    "temperature": 39.2,
+    "humidity": 58.6,
+    "duration": 1500,
+    "efficiency": 94.5,
+    "record_time": "2024-01-15T10:00:00"
+  },
+  {
+    "equipment_id": 15,
+    "task_id": 8,
+    "product_count": 90,
+    "qualified_count": 88,
+    "defect_count": 2,
+    "yield_rate": 97.78,
+    "temperature": 41.8,
+    "humidity": 61.2,
+    "duration": 1350,
+    "efficiency": 93.8,
+    "record_time": "2024-01-15T10:30:00"
+  },
+  {
+    "equipment_id": 17,
+    "task_id": 10,
+    "product_count": 60,
+    "qualified_count": 59,
+    "defect_count": 1,
+    "yield_rate": 98.33,
+    "temperature": 28.3,
+    "humidity": 55.8,
+    "duration": 900,
+    "efficiency": 96.2,
+    "record_time": "2024-01-15T11:00:00"
+  }
+]

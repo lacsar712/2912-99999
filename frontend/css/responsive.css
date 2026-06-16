@@ -1,0 +1,170 @@
+/**
+ * 响应式样式
+ */
+
+/* 平板设备 */
+@media (max-width: 992px) {
+    :root {
+        --sidebar-width: 200px;
+    }
+
+    .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 移动设备 */
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+
+    /* 侧边栏 */
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    /* 主内容区 */
+    .main-content {
+        margin-left: 0;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    /* 顶部导航 */
+    .header {
+        padding: 0 var(--spacing-md);
+    }
+
+    .header-user span {
+        display: none;
+    }
+
+    /* 页面容器 */
+    .page-container {
+        padding: var(--spacing-md);
+    }
+
+    /* 网格 */
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    /* 统计卡片 */
+    .stat-cards {
+        grid-template-columns: 1fr;
+    }
+
+    /* 工具栏 */
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+        flex-wrap: wrap;
+    }
+
+    .search-box input {
+        width: 100%;
+    }
+
+    /* 表格 */
+    .data-table {
+        font-size: 13px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: var(--spacing-sm);
+    }
+
+    .data-table .hide-mobile {
+        display: none;
+    }
+
+    /* 模态框 */
+    .modal {
+        width: 95%;
+        margin: var(--spacing-md);
+    }
+
+    /* 分页 */
+    .pagination {
+        flex-wrap: wrap;
+    }
+
+    /* 卡片 */
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+}
+
+/* 小屏幕设备 */
+@media (max-width: 576px) {
+    html {
+        font-size: 13px;
+    }
+
+    .btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+
+    .stat-card-value {
+        font-size: 24px;
+    }
+
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+}
+
+/* 打印样式 */
+@media print {
+    .sidebar,
+    .header,
+    .toolbar .btn,
+    .pagination {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .page-container {
+        padding: 0;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+    }
+}

@@ -1,0 +1,25 @@
+2026-02-14 18:06:36 - data_management - ERROR - Unexpected Exception: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances?
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/app/controllers/auth_controller.py", line 27, in login
+    return AuthService.login(
+  File "/app/services/auth_service.py", line 95, in login
+    user = User.get_by_username(username)
+  File "/app/models/user.py", line 40, in get_by_username
+    ).first()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/query.py", line 2759, in first
+    return self.limit(1)._iter().first()  # type: ignore
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 2351, in execute
+    return self._execute_internal(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 2237, in _execute_internal
+    bind = self.get_bind(**bind_arguments)
+  File "/usr/local/lib/python3.10/site-packages/flask_sqlalchemy/session.py", line 53, in get_bind
+    engines = self._db.engines
+  File "/usr/local/lib/python3.10/site-packages/flask_sqlalchemy/extension.py", line 690, in engines
+    raise RuntimeError(
+RuntimeError: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances?

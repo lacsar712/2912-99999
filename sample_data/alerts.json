@@ -1,0 +1,93 @@
+[
+  {
+    "alert_code": "ALERT-20240115-001",
+    "alert_type": "temperature_warning",
+    "equipment_id": 1,
+    "sensor_id": 1,
+    "severity": "warning",
+    "message": "温度传感器1数值异常: 76.5°C",
+    "value": 76.5,
+    "threshold": 75.0,
+    "status": "active",
+    "resolved_time": null,
+    "resolve_note": null
+  },
+  {
+    "alert_code": "ALERT-20240115-002",
+    "alert_type": "vibration_warning",
+    "equipment_id": 1,
+    "sensor_id": 3,
+    "severity": "warning",
+    "message": "振动传感器1数值异常: 8.5mm/s",
+    "value": 8.5,
+    "threshold": 8.0,
+    "status": "acknowledged",
+    "resolved_time": null,
+    "resolve_note": "已通知维护人员"
+  },
+  {
+    "alert_code": "ALERT-20240115-003",
+    "alert_type": "equipment_error",
+    "equipment_id": 6,
+    "sensor_id": 6,
+    "severity": "error",
+    "message": "SMT贴片机A设备故障",
+    "value": null,
+    "threshold": null,
+    "status": "active",
+    "resolved_time": null,
+    "resolve_note": null
+  },
+  {
+    "alert_code": "ALERT-20240114-001",
+    "alert_type": "pressure_warning",
+    "equipment_id": 3,
+    "sensor_id": 2,
+    "severity": "warning",
+    "message": "压力传感器2数值异常: 92.3psi",
+    "value": 92.3,
+    "threshold": 90.0,
+    "status": "resolved",
+    "resolved_time": "2024-01-14T14:30:00",
+    "resolve_note": "已调整压力参数，恢复正常"
+  },
+  {
+    "alert_code": "ALERT-20240113-001",
+    "alert_type": "speed_warning",
+    "equipment_id": 12,
+    "sensor_id": 21,
+    "severity": "info",
+    "message": "速度传感器3数值接近上限: 2750.5rpm",
+    "value": 2750.5,
+    "threshold": 2800.0,
+    "status": "resolved",
+    "resolved_time": "2024-01-13T16:45:00",
+    "resolve_note": "已优化运行参数"
+  },
+  {
+    "alert_code": "ALERT-20240112-001",
+    "alert_type": "sensor_offline",
+    "equipment_id": 9,
+    "sensor_id": 9,
+    "severity": "warning",
+    "message": "温度传感器8传感器离线",
+    "value": null,
+    "threshold": null,
+    "status": "active",
+    "resolved_time": null,
+    "resolve_note": null
+  },
+  {
+    "alert_code": "ALERT-20240115-004",
+    "alert_type": "yield_warning",
+    "equipment_id": 15,
+    "sensor_id": null,
+    "severity": "warning",
+    "message": "生产效率低于阈值: 85.2%",
+    "value": 85.2,
+    "threshold": 90.0,
+    "status": "active",
+    "resolved_time": null,
+    "resolve_note": null
+  }
+]

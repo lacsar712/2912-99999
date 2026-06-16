@@ -1,0 +1,11 @@
+line_code,line_name,description,status,capacity,location,supervisor
+LINE-1001,手机外壳生产线,生产手机外壳的自动化生产线,running,5000,A车间,张三
+LINE-1002,汽车零件生产线,生产汽车零部件的精密生产线,running,3000,B车间,李四
+LINE-1003,电子元件生产线,生产电子元件的SMT生产线,maintenance,2000,C车间,王五
+LINE-1004,塑料制品生产线,注塑成型塑料制品生产线,stopped,4000,D车间,赵六
+LINE-1005,金属配件生产线,CNC加工金属配件生产线,running,2500,E车间,钱七
+LINE-1006,测试生产线,用于新产品测试的试验线,running,1000,测试区,孙八
+LINE-1007,包装生产线,产品包装和贴标生产线,error,1500,中央仓库,周九
+LINE-1008,装配生产线,产品最终装配生产线,running,3500,A车间,吴十
+LINE-1009,喷涂生产线,表面喷涂处理生产线,maintenance,1800,B车间,郑十一
+LINE-1010,检测生产线,产品质量检测生产线,running,1200,测试区,王十二

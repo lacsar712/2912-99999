@@ -1,0 +1,41 @@
+# Flask核心
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-Limiter==3.5.0
+
+# 数据库
+SQLAlchemy==2.0.23
+Flask-SQLAlchemy==3.1.1
+PyMySQL==1.1.0
+cryptography==42.0.0
+psycopg2-binary==2.9.9
+pymongo==4.6.0
+
+# Redis
+redis==5.0.1
+
+# JWT认证
+PyJWT==2.8.0
+
+# 密码加密
+bcrypt==4.1.1
+
+# 数据验证
+marshmallow==3.20.1
+email-validator==2.1.0
+
+# 文件处理
+openpyxl==3.1.2
+python-dateutil==2.8.2
+
+# API文档
+flasgger==0.9.7.1
+
+# 工具
+python-dotenv==1.0.0
+gunicorn==21.2.0
+requests==2.31.0
+
+# 开发工具
+pytest==7.4.3
+pytest-cov==4.1.0
