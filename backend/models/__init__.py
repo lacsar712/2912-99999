@@ -15,6 +15,13 @@ from .production import (
     ProductionRecord,
     AlertRecord
 )
+from .safety import (
+    HazardType,
+    InspectionTask,
+    HazardRecord,
+    RectificationRecord,
+    AccidentRecord
+)
 
 __all__ = [
     'BaseModel',
@@ -28,5 +35,10 @@ __all__ = [
     'Sensor',
     'ProductionTask',
     'ProductionRecord',
-    'AlertRecord'
+    'AlertRecord',
+    'HazardType',
+    'InspectionTask',
+    'HazardRecord',
+    'RectificationRecord',
+    'AccidentRecord'
 ]

@@ -16,6 +16,7 @@ from controllers.auth_controller import auth_bp
 from controllers.production_controller import production_bp
 from controllers.simulation_controller import simulation_bp
 from controllers.alert_controller import alert_bp
+from controllers.safety_controller import safety_bp
 
 # 请求限制器 - 默认配置
 limiter = None
@@ -61,6 +62,7 @@ def create_app(config_class=Config):
     app.register_blueprint(production_bp, url_prefix='/api/production')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(alert_bp, url_prefix='/api/alerts')
+    app.register_blueprint(safety_bp, url_prefix='/api/safety')
 
     # 健康检查
     @app.route('/health')
