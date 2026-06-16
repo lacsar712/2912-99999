@@ -899,6 +899,239 @@
                 display: none;
             }
         }
+
+        /* 环境监测样式 */
+        .env-monitor-container {
+            padding-bottom: 20px;
+        }
+
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .stat-card-icon.primary { background: rgba(0, 123, 255, 0.1); }
+        .stat-card-icon.success { background: rgba(40, 167, 69, 0.1); }
+        .stat-card-icon.warning { background: rgba(255, 193, 7, 0.1); }
+        .stat-card-icon.danger { background: rgba(220, 53, 69, 0.1); }
+
+        .stat-card-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-card-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .env-area-panel {
+            transition: all 0.3s;
+        }
+
+        .env-area-panel.panel-warning {
+            border-color: var(--warning-color);
+            box-shadow: 0 0 0 1px var(--warning-color), var(--shadow-md);
+        }
+
+        .alert-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--danger-color);
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .env-gauges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .env-gauge {
+            background: var(--bg-light);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .env-gauge.abnormal {
+            border-color: var(--danger-color);
+            background: rgba(220, 53, 69, 0.05);
+        }
+
+        .gauge-alert-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        .gauge-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .gauge-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            margin-bottom: 4px;
+        }
+
+        .gauge-unit {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .gauge-point {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .gauge-range {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed var(--border-light);
+        }
+
+        /* 监测项目选择器 */
+        .env-item-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .env-item-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-light);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .env-item-checkbox:hover {
+            background: var(--border-light);
+        }
+
+        .env-item-checkbox input {
+            display: none;
+        }
+
+        .env-item-checkbox .check-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            opacity: 0.4;
+            transition: all 0.2s;
+        }
+
+        .env-item-checkbox input:checked + .check-icon {
+            opacity: 1;
+            border-color: white;
+            box-shadow: 0 0 0 2px currentColor;
+        }
+
+        .env-item-checkbox input:checked ~ span:last-child {
+            font-weight: 500;
+        }
+
+        /* 按钮组 */
+        .btn-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-group .btn {
+            border-radius: 4px;
+        }
+
+        .btn-group .btn:first-child {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .btn-group .btn:last-child {
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* 表格工具栏 */
+        .table-toolbar {
+            margin-bottom: 16px;
+        }
+
+        .toolbar-filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .text-truncate {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -957,6 +1190,10 @@
                 <span class="nav-icon">🧪</span>
                 <span class="nav-text">数据模拟</span>
             </a>
+            <a href="#" class="nav-item" data-page="env-monitor">
+                <span class="nav-icon">🌡️</span>
+                <span class="nav-text">环境监测</span>
+            </a>
         </nav>
     </aside>
 
@@ -1008,6 +1245,7 @@
     <script src="/js/services/maintenance.js"></script>
     <script src="/js/services/disposal.js"></script>
     <script src="/js/services/knowledge.js"></script>
+    <script src="/js/services/envMonitor.js"></script>
     <script src="/js/pages/monitor.js"></script>
     <script src="/js/pages/production-line.js"></script>
     <script src="/js/pages/equipment.js"></script>
@@ -1020,6 +1258,7 @@
     <script src="/js/pages/maintenance.js"></script>
     <script src="/js/pages/disposal.js"></script>
     <script src="/js/pages/knowledge.js"></script>
+    <script src="/js/pages/envMonitor.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

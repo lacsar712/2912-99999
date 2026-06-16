@@ -15,7 +15,8 @@ const App = {
         spare: SparePage,
         disposal: DisposalPage,
         simulation: SimulationPage,
-        knowledge: KnowledgePage
+        knowledge: KnowledgePage,
+        'env-monitor': EnvMonitorPage
     },
 
     init() {
@@ -135,7 +136,8 @@ const App = {
             spare: '备件管理',
             disposal: '不合格品处置',
             simulation: '数据模拟',
-            knowledge: '知识库'
+            knowledge: '知识库',
+            'env-monitor': '环境监测'
         };
         document.getElementById('pageTitle').textContent = titles[page] || page;
         document.title = `${titles[page] || page} - 生产线监控系统`;

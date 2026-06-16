@@ -5,6 +5,7 @@
 from flask import Blueprint, request, g
 import os
 import tempfile
+from datetime import datetime
 from services.simulation_service import DataSimulationService
 from services.equipment_simulation_service import EquipmentSimulationService
 from middleware.auth_middleware import login_required
@@ -312,5 +313,207 @@ def list_equipment_data_sources():
         'data': {
             'sources': equipment_sources,
             'count': len(equipment_sources)
+        }
+    }
+
+
+# ==================== 环境监测数据模拟接口 ====================
+
+@simulation_bp.route('/env-monitor/config', methods=['GET'])
+@login_required
+def get_env_monitor_simulation_config():
+    """获取环境监测模拟配置"""
+    from services.env_monitor_service import EnvMonitorService
+    
+    config = {
+        'source_types': ['api', 'websocket', 'file_stream', 'user_input'],
+        'default_config': {
+            'interval': 5,
+            'abnormal_probability': 0.1,
+            'monitor_items': ['温度', '湿度', 'PM2.5', 'PM10', '噪音', 'CO2', 'CO', '甲醛', 'TVOC', '气压', '风速', '照度']
+        },
+        'area_types': ['workshop', 'warehouse', 'office', 'other']
+    }
+    
+    return {
+        'code': 200,
+        'message': 'success',
+        'data': config
+    }
+
+
+@simulation_bp.route('/env-monitor/generate', methods=['POST'])
+@login_required
+def generate_env_monitor_data():
+    """生成环境监测模拟数据"""
+    from services.env_monitor_service import EnvMonitorService
+    
+    data = request.get_json() or {}
+    config = data.get('config')
+    
+    return EnvMonitorService.generate_simulated_readings(config)
+
+
+@simulation_bp.route('/env-monitor/source/create', methods=['POST'])
+@login_required
+def create_env_monitor_data_source():
+    """创建环境监测模拟数据源"""
+    from services.env_monitor_service import EnvMonitorService
+    
+    data = request.get_json()
+    if not data:
+        return {'code': 400, 'message': '请求数据为空'}
+    
+    source_type = data.get('type')
+    config = data.get('config', {})
+    
+    if not source_type:
+        return {'code': 400, 'message': '缺少数据源类型'}
+    
+    source_id = f'env_monitor_{source_type}_{datetime.now().strftime("%Y%m%d%H%M%S")}'
+    
+    if source_type == 'api':
+        result = {
+            'source_id': source_id,
+            'type': 'api',
+            'name': config.get('name', '环境监测API数据源'),
+            'endpoint': config.get('endpoint', '/api/env-monitor/readings/realtime'),
+            'method': config.get('method', 'GET'),
+            'interval': config.get('interval', 30),
+            'description': '环境监测API数据源，定期获取实时读数'
+        }
+    elif source_type == 'websocket':
+        result = {
+            'source_id': source_id,
+            'type': 'websocket',
+            'name': config.get('name', '环境监测WebSocket数据源'),
+            'url': config.get('url', 'ws://localhost:5000/api/env-monitor/ws'),
+            'interval': config.get('interval', 5),
+            'description': '环境监测WebSocket数据源，实时推送读数'
+        }
+    elif source_type == 'file_stream':
+        result = {
+            'source_id': source_id,
+            'type': 'file_stream',
+            'name': config.get('name', '环境监测文件流数据源'),
+            'file_path': config.get('file_path', ''),
+            'format': config.get('format', 'csv'),
+            'interval': config.get('interval', 60),
+            'description': '环境监测文件流数据源，从文件读取读数'
+        }
+    elif source_type == 'user_input':
+        result = {
+            'source_id': source_id,
+            'type': 'user_input',
+            'name': config.get('name', '环境监测人工录入数据源'),
+            'form_config': config.get('form_config', {
+                'fields': [
+                    {'name': 'point_id', 'label': '监测点', 'type': 'select', 'required': True},
+                    {'name': 'item_name', 'label': '监测项目', 'type': 'select', 'required': True},
+                    {'name': 'item_value', 'label': '数值', 'type': 'number', 'required': True}
+                ]
+            }),
+            'description': '环境监测人工录入数据源'
+        }
+    else:
+        return {'code': 400, 'message': f'不支持的数据源类型: {source_type}'}
+    
+    # 记录操作日志
+    from models.log import Log
+    Log.add_log(
+        g.user_id, g.username, 'create', 'simulation',
+        f'创建环境监测模拟数据源: {source_type} ({source_id})'
+    )
+    
+    return {
+        'code': 200,
+        'message': '环境监测模拟数据源创建成功',
+        'data': result
+    }
+
+
+@simulation_bp.route('/env-monitor/source/<source_id>/generate', methods=['POST'])
+@login_required
+def generate_env_monitor_from_source(source_id):
+    """从环境监测模拟数据源生成数据"""
+    from services.env_monitor_service import EnvMonitorService
+    
+    data = request.get_json() or {}
+    count = data.get('count', 10)
+    config = data.get('config', {})
+    
+    # 根据数据源类型生成不同的模拟数据
+    if source_id.startswith('env_monitor_api_'):
+        # API类型 - 直接调用实时数据接口
+        result = EnvMonitorService.get_realtime_readings()
+        return {
+            'code': 200,
+            'message': f'成功从API数据源获取{count}条环境监测数据',
+            'data': {
+                'source_id': source_id,
+                'generated_count': count,
+                'readings': result.data
+            }
+        }
+    elif source_id.startswith('env_monitor_websocket_'):
+        # WebSocket类型 - 生成流式数据
+        result = EnvMonitorService.generate_simulated_readings(config)
+        return {
+            'code': 200,
+            'message': f'成功从WebSocket数据源生成{count}条环境监测数据',
+            'data': {
+                'source_id': source_id,
+                'generated_count': count,
+                'result': result.data
+            }
+        }
+    else:
+        # 其他类型 - 生成模拟读数
+        result = EnvMonitorService.generate_simulated_readings(config)
+        return {
+            'code': 200,
+            'message': f'成功从数据源生成环境监测数据',
+            'data': {
+                'source_id': source_id,
+                'result': result.data
+            }
+        }
+
+
+@simulation_bp.route('/env-monitor/sources', methods=['GET'])
+@login_required
+def list_env_monitor_data_sources():
+    """列出可用的环境监测数据源"""
+    # 返回预设的环境监测数据源
+    sources = [
+        {
+            'source_id': 'env_monitor_api_default',
+            'type': 'api',
+            'name': '环境监测实时API',
+            'description': '获取环境监测实时读数',
+            'status': 'active'
+        },
+        {
+            'source_id': 'env_monitor_websocket_default',
+            'type': 'websocket',
+            'name': '环境监测WebSocket',
+            'description': '实时推送环境监测数据',
+            'status': 'active'
+        },
+        {
+            'source_id': 'env_monitor_simulation_default',
+            'type': 'simulation',
+            'name': '环境监测模拟数据',
+            'description': '生成环境监测模拟读数',
+            'status': 'active'
+        }
+    ]
+    
+    return {
+        'code': 200,
+        'message': 'success',
+        'data': {
+            'sources': sources,
+            'count': len(sources)
         }
     }
