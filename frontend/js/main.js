@@ -10,6 +10,7 @@ const App = {
         tasks: TasksPage,
         alerts: AlertsPage,
         safety: SafetyPage,
+        training: TrainingPage,
         simulation: SimulationPage
     },
 
@@ -88,6 +89,7 @@ const App = {
             tasks: '生产任务',
             alerts: '告警中心',
             safety: '安全管理',
+            training: '培训资质管理',
             simulation: '数据模拟'
         };
         document.getElementById('pageTitle').textContent = titles[page] || page;

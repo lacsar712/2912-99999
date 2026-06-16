@@ -1,6 +1,9 @@
 """
 生产线监控系统 - 应用入口
 """
+import threading
+import time
+from datetime import datetime
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -17,9 +20,38 @@ from controllers.production_controller import production_bp
 from controllers.simulation_controller import simulation_bp
 from controllers.alert_controller import alert_bp
 from controllers.safety_controller import safety_bp
+from controllers.training_controller import training_bp
 
 # 请求限制器 - 默认配置
 limiter = None
+
+# 调度任务运行状态
+_scheduler_running = False
+
+
+def start_scheduler(app):
+    """启动后台调度线程 - 定时检查证书到期和资质合规"""
+    global _scheduler_running
+    if _scheduler_running:
+        return
+    _scheduler_running = True
+
+    def scheduler_loop():
+        with app.app_context():
+            from services.training_service import TrainingService
+            from utils.logger import logger
+            while True:
+                try:
+                    logger.info(f"Scheduler running - certificate check at {datetime.now()}")
+                    TrainingService.check_expiring_certificates(30)
+                    TrainingService.check_all_qualifications()
+                except Exception as e:
+                    logger.error(f"Scheduler task error: {e}")
+                time.sleep(12 * 60 * 60)
+
+    thread = threading.Thread(target=scheduler_loop, daemon=True, name="training-scheduler")
+    thread.start()
+    print("[Training Scheduler] Started background certificate & qualification checker (12h interval)")
 
 
 def create_app(config_class=Config):
@@ -63,6 +95,14 @@ def create_app(config_class=Config):
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(alert_bp, url_prefix='/api/alerts')
     app.register_blueprint(safety_bp, url_prefix='/api/safety')
+    app.register_blueprint(training_bp, url_prefix='/api/training')
+
+    # 启动后台调度线程（非测试环境）
+    if not app.config.get('TESTING'):
+        try:
+            start_scheduler(app)
+        except Exception as e:
+            print(f"[Training Scheduler] Failed to start: {e}")
 
     # 健康检查
     @app.route('/health')

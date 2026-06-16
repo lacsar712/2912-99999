@@ -14,6 +14,7 @@ class User(BaseModel):
     password = db.Column(db.String(255), nullable=False, comment='密码(加密)')
     email = db.Column(db.String(100), comment='邮箱')
     role = db.Column(db.String(20), default='user', comment='角色: admin/user')
+    position = db.Column(db.String(100), comment='岗位')
 
     def to_dict(self):
         """转换为字典"""
@@ -28,7 +29,8 @@ class User(BaseModel):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'role': self.role
+            'role': self.role,
+            'position': self.position
         }
 
     @staticmethod
