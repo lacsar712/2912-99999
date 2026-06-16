@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/components.css">
     <link rel="stylesheet" href="/css/responsive.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         /* 生产线监控特定样式 */
         :root {
@@ -184,6 +185,720 @@
             border-bottom-color: var(--primary-color, #007bff);
             font-weight: 500;
         }
+
+        /* 知识库样式 */
+        .knowledge-container {
+            display: flex;
+            height: calc(100vh - var(--header-height, 60px) - 32px);
+            gap: 16px;
+        }
+
+        .knowledge-sidebar {
+            width: 260px;
+            background: white;
+            border-radius: var(--radius-md, 8px);
+            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .knowledge-sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-light, #e9ecef);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .knowledge-sidebar-header h3 {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .knowledge-category-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .tree-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .tree-item:hover {
+            background: var(--bg-light, #f8f9fa);
+        }
+
+        .tree-item.active {
+            background: rgba(0, 123, 255, 0.1);
+            color: var(--primary-color, #007bff);
+        }
+
+        .tree-item-name {
+            flex: 1;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tree-toggle {
+            width: 16px;
+            font-size: 10px;
+            color: var(--text-secondary, #6c757d);
+            flex-shrink: 0;
+        }
+
+        .tree-item-actions {
+            display: none;
+            gap: 4px;
+        }
+
+        .tree-item:hover .tree-item-actions {
+            display: flex;
+        }
+
+        .tree-action-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .tree-action-btn:hover {
+            background: var(--border-light, #e9ecef);
+        }
+
+        .knowledge-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .knowledge-toolbar {
+            background: white;
+            padding: 12px 16px;
+            border-radius: var(--radius-md, 8px);
+            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toolbar-left, .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .knowledge-search-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .knowledge-search-box .search-input {
+            width: 300px;
+            padding: 6px 12px;
+            border: 1px solid var(--border-color, #dee2e6);
+            border-radius: var(--radius-sm, 4px);
+            font-size: 14px;
+        }
+
+        .knowledge-search-box .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color, #007bff);
+        }
+
+        .knowledge-content {
+            flex: 1;
+            background: white;
+            border-radius: var(--radius-md, 8px);
+            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+            overflow-y: auto;
+        }
+
+        /* 文档列表 */
+        .doc-list {
+            padding: 16px;
+        }
+
+        .doc-list-header {
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-light, #e9ecef);
+            margin-bottom: 12px;
+            color: var(--text-secondary, #6c757d);
+            font-size: 14px;
+        }
+
+        .doc-list-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-light, #e9ecef);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .doc-list-item:hover {
+            background: var(--bg-light, #f8f9fa);
+        }
+
+        .doc-item-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary, #212529);
+        }
+
+        .doc-item-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-secondary, #6c757d);
+            margin-bottom: 8px;
+        }
+
+        .doc-item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .doc-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--bg-light, #f8f9fa);
+            color: var(--text-secondary, #6c757d);
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .doc-status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .doc-status-published {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .doc-status-deprecated {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .doc-item-highlight {
+            font-size: 13px;
+            color: var(--text-secondary, #6c757d);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted, #999);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        /* 文档详情 */
+        .doc-detail {
+            padding: 32px;
+        }
+
+        .doc-detail-header {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-light, #e9ecef);
+        }
+
+        .doc-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .doc-detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 14px;
+            color: var(--text-secondary, #6c757d);
+            margin-bottom: 12px;
+        }
+
+        .doc-status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .doc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .doc-actions-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .version-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .version-selector label {
+            font-size: 14px;
+            color: var(--text-secondary, #6c757d);
+        }
+
+        .like-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .doc-content {
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .markdown-body h1 { font-size: 24px; margin: 20px 0 12px; }
+        .markdown-body h2 { font-size: 20px; margin: 18px 0 10px; }
+        .markdown-body h3 { font-size: 18px; margin: 16px 0 8px; }
+        .markdown-body p { margin: 10px 0; }
+        .markdown-body ul, .markdown-body ol { margin: 10px 0; padding-left: 24px; }
+        .markdown-body li { margin: 4px 0; }
+        .markdown-body code {
+            background: var(--bg-light, #f8f9fa);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .markdown-body pre {
+            background: var(--bg-dark, #343a40);
+            color: var(--text-light, #fff);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        .markdown-body pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .markdown-body blockquote {
+            border-left: 4px solid var(--primary-color, #007bff);
+            padding-left: 16px;
+            margin: 12px 0;
+            color: var(--text-secondary, #6c757d);
+        }
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+        .markdown-body th, .markdown-body td {
+            border: 1px solid var(--border-color, #dee2e6);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .markdown-body th {
+            background: var(--bg-light, #f8f9fa);
+        }
+
+        /* 附件 */
+        .doc-attachments {
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--bg-light, #f8f9fa);
+            border-radius: 8px;
+        }
+
+        .doc-attachments h4 {
+            margin-bottom: 12px;
+        }
+
+        .attachment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .attachment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        /* 评论区 */
+        .doc-comments-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-light, #e9ecef);
+        }
+
+        .doc-comments-section h4 {
+            margin-bottom: 16px;
+        }
+
+        .comment-input-area {
+            margin-bottom: 24px;
+        }
+
+        .comment-input-area textarea {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-light, #f8f9fa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .comment-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .comment-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .comment-author {
+            font-weight: 500;
+            color: var(--text-primary, #212529);
+        }
+
+        .comment-time {
+            color: var(--text-muted, #999);
+        }
+
+        .comment-content {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary, #6c757d);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .comment-action-btn:hover {
+            color: var(--primary-color, #007bff);
+        }
+
+        .comment-replies {
+            margin-top: 12px;
+            padding-left: 12px;
+            border-left: 2px solid var(--border-light, #e9ecef);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .comment-reply .comment-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+        }
+
+        .reply-input-area {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .reply-input {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .reply-input-area .btn {
+            align-self: flex-end;
+        }
+
+        .empty-comments {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted, #999);
+            font-size: 14px;
+        }
+
+        /* 文档编辑 */
+        .doc-edit {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .doc-edit-header {
+            margin-bottom: 16px;
+        }
+
+        .doc-title-input {
+            width: 100%;
+            font-size: 24px;
+            font-weight: 600;
+            padding: 8px 0;
+            border: none;
+            border-bottom: 2px solid var(--border-light, #e9ecef);
+            outline: none;
+        }
+
+        .doc-title-input:focus {
+            border-bottom-color: var(--primary-color, #007bff);
+        }
+
+        .doc-edit-meta {
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--text-secondary, #6c757d);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 6px 12px;
+            border: 1px solid var(--border-color, #dee2e6);
+            border-radius: var(--radius-sm, 4px);
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color, #007bff);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .doc-edit-body {
+            flex: 1;
+            display: flex;
+            gap: 16px;
+            min-height: 0;
+            margin-bottom: 16px;
+        }
+
+        .editor-panel, .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color, #dee2e6);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 10px 16px;
+            background: var(--bg-light, #f8f9fa);
+            border-bottom: 1px solid var(--border-color, #dee2e6);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .markdown-editor {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .markdown-preview {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .doc-edit-footer {
+            border-top: 1px solid var(--border-light, #e9ecef);
+            padding-top: 16px;
+        }
+
+        .attachment-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: var(--text-muted, #999);
+        }
+
+        .attachment-preview-list {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .attachment-preview-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-light, #f8f9fa);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .remove-attachment-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: var(--danger-color, #dc3545);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        /* 顶部搜索框 */
+        .header-search {
+            flex: 1;
+            max-width: 400px;
+            display: flex;
+            gap: 8px;
+            margin: 0 20px;
+        }
+
+        .header-search input {
+            flex: 1;
+            padding: 6px 12px;
+            border: 1px solid var(--border-color, #dee2e6);
+            border-radius: var(--radius-sm, 4px);
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-search input:focus {
+            outline: none;
+            border-color: var(--primary-color, #007bff);
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .knowledge-sidebar {
+                width: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .knowledge-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .knowledge-sidebar {
+                width: 100%;
+                max-height: 300px;
+            }
+            .doc-edit-body {
+                flex-direction: column;
+            }
+            .header-search {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -234,6 +949,10 @@
                 <span class="nav-icon">♻️</span>
                 <span class="nav-text">不合格品处置</span>
             </a>
+            <a href="#" class="nav-item" data-page="knowledge">
+                <span class="nav-icon">📚</span>
+                <span class="nav-text">知识库</span>
+            </a>
             <a href="#" class="nav-item" data-page="simulation">
                 <span class="nav-icon">🧪</span>
                 <span class="nav-text">数据模拟</span>
@@ -247,6 +966,10 @@
         <header class="header">
             <button class="menu-toggle" id="menuToggle">☰</button>
             <div class="header-title" id="pageTitle">监控中心</div>
+            <div class="header-search">
+                <input type="text" id="globalSearchInput" placeholder="全局搜索知识库文档..." />
+                <button class="btn btn-sm btn-primary" id="globalSearchBtn">🔍</button>
+            </div>
             <div class="header-user">
                 <span id="username">用户</span>
                 <button class="btn btn-sm btn-outline" id="logoutBtn">退出</button>
@@ -284,6 +1007,7 @@
     <script src="/js/services/spare.js"></script>
     <script src="/js/services/maintenance.js"></script>
     <script src="/js/services/disposal.js"></script>
+    <script src="/js/services/knowledge.js"></script>
     <script src="/js/pages/monitor.js"></script>
     <script src="/js/pages/production-line.js"></script>
     <script src="/js/pages/equipment.js"></script>
@@ -295,6 +1019,7 @@
     <script src="/js/pages/spare.js"></script>
     <script src="/js/pages/maintenance.js"></script>
     <script src="/js/pages/disposal.js"></script>
+    <script src="/js/pages/knowledge.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

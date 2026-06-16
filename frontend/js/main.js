@@ -14,7 +14,8 @@ const App = {
         maintenance: MaintenancePage,
         spare: SparePage,
         disposal: DisposalPage,
-        simulation: SimulationPage
+        simulation: SimulationPage,
+        knowledge: KnowledgePage
     },
 
     init() {
@@ -76,6 +77,43 @@ const App = {
                 window.location.href = '/login.html';
             }
         });
+
+        // 全局搜索
+        const globalSearchInput = document.getElementById('globalSearchInput');
+        const globalSearchBtn = document.getElementById('globalSearchBtn');
+        
+        if (globalSearchInput) {
+            globalSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.doGlobalSearch();
+                }
+            });
+        }
+        
+        if (globalSearchBtn) {
+            globalSearchBtn.addEventListener('click', () => {
+                this.doGlobalSearch();
+            });
+        }
+    },
+
+    doGlobalSearch() {
+        const keyword = document.getElementById('globalSearchInput')?.value.trim();
+        if (!keyword) {
+            Toast.warning('请输入搜索关键词');
+            return;
+        }
+        this.navigate('knowledge');
+        // 延迟执行，确保知识库页面已加载
+        setTimeout(() => {
+            if (window.KnowledgePage) {
+                KnowledgePage.searchKeyword = keyword;
+                KnowledgePage.page = 1;
+                KnowledgePage.view = 'list';
+                KnowledgePage.render();
+                KnowledgePage.loadDocuments();
+            }
+        }, 100);
     },
 
     navigate(page) {
@@ -96,7 +134,8 @@ const App = {
             maintenance: '维修工单',
             spare: '备件管理',
             disposal: '不合格品处置',
-            simulation: '数据模拟'
+            simulation: '数据模拟',
+            knowledge: '知识库'
         };
         document.getElementById('pageTitle').textContent = titles[page] || page;
         document.title = `${titles[page] || page} - 生产线监控系统`;

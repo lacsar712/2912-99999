@@ -27,6 +27,13 @@ from .disposal import (
     DisposalApproval,
     DisposalResult
 )
+from .knowledge import (
+    KnowledgeCategory,
+    KnowledgeDocument,
+    KnowledgeVersion,
+    KnowledgeComment,
+    KnowledgeLike
+)
 
 __all__ = [
     'BaseModel',
@@ -48,5 +55,10 @@ __all__ = [
     'AccidentRecord',
     'DisposalOrder',
     'DisposalApproval',
-    'DisposalResult'
+    'DisposalResult',
+    'KnowledgeCategory',
+    'KnowledgeDocument',
+    'KnowledgeVersion',
+    'KnowledgeComment',
+    'KnowledgeLike'
 ]

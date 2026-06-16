@@ -24,6 +24,7 @@ from controllers.training_controller import training_bp
 from controllers.spare_controller import spare_bp
 from controllers.maintenance_controller import maintenance_bp
 from controllers.disposal_controller import disposal_bp
+from controllers.knowledge_controller import knowledge_bp
 
 # 请求限制器 - 默认配置
 limiter = None
@@ -105,6 +106,7 @@ def create_app(config_class=Config):
     app.register_blueprint(spare_bp, url_prefix='/api/spare')
     app.register_blueprint(maintenance_bp, url_prefix='/api/maintenance')
     app.register_blueprint(disposal_bp, url_prefix='/api/disposal')
+    app.register_blueprint(knowledge_bp, url_prefix='/api/knowledge')
 
     # 启动后台调度线程（非测试环境）
     if not app.config.get('TESTING'):
