@@ -21,6 +21,8 @@ from controllers.simulation_controller import simulation_bp
 from controllers.alert_controller import alert_bp
 from controllers.safety_controller import safety_bp
 from controllers.training_controller import training_bp
+from controllers.spare_controller import spare_bp
+from controllers.maintenance_controller import maintenance_bp
 
 # 请求限制器 - 默认配置
 limiter = None
@@ -30,7 +32,7 @@ _scheduler_running = False
 
 
 def start_scheduler(app):
-    """启动后台调度线程 - 定时检查证书到期和资质合规"""
+    """启动后台调度线程 - 定时检查证书到期、资质合规和备件安全库存"""
     global _scheduler_running
     if _scheduler_running:
         return
@@ -39,19 +41,22 @@ def start_scheduler(app):
     def scheduler_loop():
         with app.app_context():
             from services.training_service import TrainingService
+            from services.spare_service import SparePartService
             from utils.logger import logger
             while True:
                 try:
                     logger.info(f"Scheduler running - certificate check at {datetime.now()}")
                     TrainingService.check_expiring_certificates(30)
                     TrainingService.check_all_qualifications()
+                    logger.info(f"Scheduler running - spare low stock check at {datetime.now()}")
+                    SparePartService.check_all_low_stock()
                 except Exception as e:
                     logger.error(f"Scheduler task error: {e}")
                 time.sleep(12 * 60 * 60)
 
     thread = threading.Thread(target=scheduler_loop, daemon=True, name="training-scheduler")
     thread.start()
-    print("[Training Scheduler] Started background certificate & qualification checker (12h interval)")
+    print("[Training Scheduler] Started background certificate, qualification & spare stock checker (12h interval)")
 
 
 def create_app(config_class=Config):
@@ -96,6 +101,8 @@ def create_app(config_class=Config):
     app.register_blueprint(alert_bp, url_prefix='/api/alerts')
     app.register_blueprint(safety_bp, url_prefix='/api/safety')
     app.register_blueprint(training_bp, url_prefix='/api/training')
+    app.register_blueprint(spare_bp, url_prefix='/api/spare')
+    app.register_blueprint(maintenance_bp, url_prefix='/api/maintenance')
 
     # 启动后台调度线程（非测试环境）
     if not app.config.get('TESTING'):
