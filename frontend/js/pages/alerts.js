@@ -167,6 +167,7 @@ const AlertsPage = {
                 <td><span class="badge ${status.class}">${status.text}</span></td>
                 <td>${this.formatTime(alert.create_time)}</td>
                 <td>
+                    <button class="btn btn-sm btn-info" onclick="AlertsPage.viewCaptures(${alert.id})">📷 查看抓图</button>
                     ${alert.status === 'active' ? `
                         <button class="btn btn-sm btn-warning" onclick="AlertsPage.acknowledge(${alert.id})">确认</button>
                         <button class="btn btn-sm btn-success" onclick="AlertsPage.resolve(${alert.id})">解决</button>
@@ -177,6 +178,128 @@ const AlertsPage = {
                 </td>
             </tr>
         `;
+    },
+
+    async viewCaptures(alertId) {
+        try {
+            const response = await VideoMonitorService.getCapturesByAlert(alertId);
+            if (response.code === 200) {
+                const records = response.data || [];
+                this.showCaptureCarousel(records, alertId);
+            }
+        } catch (e) {
+            Toast.error('加载抓图记录失败');
+        }
+    },
+
+    showCaptureCarousel(records, alertId) {
+        if (!records || records.length === 0) {
+            Modal.showHtml(`
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3>告警抓图</h3>
+                    </div>
+                    <div class="modal-body" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📷</div>
+                        <div style="color: var(--text-secondary);">该告警暂无抓图记录</div>
+                        <div style="margin-top: 16px;">
+                            <button class="btn btn-primary" onclick="AlertsPage.manualTriggerCapture(${alertId})">手动触发抓图</button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="Modal.close()">关闭</button>
+                    </div>
+                </div>
+            `);
+            return;
+        }
+
+        const carouselId = 'carousel_' + alertId + '_' + Date.now();
+        window._carouselData = window._carouselData || {};
+        window._carouselData[carouselId] = { records, index: 0 };
+
+        const first = records[0];
+        const html = `
+            <div class="modal-content" style="max-width: 760px;">
+                <div class="modal-header">
+                    <h3>告警抓图轮播 (${records.length}张)</h3>
+                </div>
+                <div class="modal-body" style="padding: 16px;">
+                    <div id="${carouselId}" style="position: relative;">
+                        <div style="text-align: center; background: #000; border-radius: 8px; padding: 12px; min-height: 320px; display: flex; align-items: center; justify-content: center;">
+                            <img id="${carouselId}_img" src="${first.image_base64}" style="max-width: 100%; max-height: 400px; border-radius: 4px;">
+                        </div>
+                        <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <div style="color: var(--text-secondary); font-size: 13px;">
+                                <span id="${carouselId}_info">第 1 / ${records.length} 张</span>
+                                &nbsp;|&nbsp;
+                                <span id="${carouselId}_cam">${first.camera_name || first.camera_code || '未知摄像头'}</span>
+                                &nbsp;|&nbsp;
+                                <span id="${carouselId}_time">${this.formatTime(first.trigger_time)}</span>
+                                &nbsp;|&nbsp;
+                                <span class="badge ${first.source === 'alert_auto' ? 'badge-warning' : 'badge-info'}">${first.source === 'alert_auto' ? '告警自动' : '手动'}</span>
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn btn-sm btn-outline" onclick="AlertsPage.carouselPrev('${carouselId}')">← 上一张</button>
+                                <button class="btn btn-sm btn-outline" onclick="AlertsPage.carouselNext('${carouselId}')">下一张 →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="Modal.close()">关闭</button>
+                </div>
+            </div>
+        `;
+        Modal.showHtml(html);
+    },
+
+    carouselPrev(carouselId) {
+        const data = window._carouselData?.[carouselId];
+        if (!data) return;
+        data.index = (data.index - 1 + data.records.length) % data.records.length;
+        this.updateCarousel(carouselId);
+    },
+
+    carouselNext(carouselId) {
+        const data = window._carouselData?.[carouselId];
+        if (!data) return;
+        data.index = (data.index + 1) % data.records.length;
+        this.updateCarousel(carouselId);
+    },
+
+    updateCarousel(carouselId) {
+        const data = window._carouselData?.[carouselId];
+        if (!data) return;
+        const rec = data.records[data.index];
+        const img = document.getElementById(carouselId + '_img');
+        const info = document.getElementById(carouselId + '_info');
+        const cam = document.getElementById(carouselId + '_cam');
+        const time = document.getElementById(carouselId + '_time');
+        if (img) img.src = rec.image_base64;
+        if (info) info.textContent = `第 ${data.index + 1} / ${data.records.length} 张`;
+        if (cam) cam.textContent = rec.camera_name || rec.camera_code || '未知摄像头';
+        if (time) time.textContent = this.formatTime(rec.trigger_time);
+    },
+
+    async manualTriggerCapture(alertId) {
+        try {
+            const response = await VideoMonitorService.triggerAlertCapture({ alert_id: alertId });
+            if (response.code === 200) {
+                const count = response.data?.created_count || 0;
+                if (count > 0) {
+                    Toast.success(`触发成功，生成 ${count} 张抓图`);
+                    Modal.close();
+                    setTimeout(() => this.viewCaptures(alertId), 300);
+                } else {
+                    Toast.warning(response.data?.message || '未找到关联摄像头');
+                }
+            } else {
+                Toast.error(response.message || '触发失败');
+            }
+        } catch (e) {
+            Toast.error('触发失败');
+        }
     },
 
     formatTime(timeStr) {

@@ -17,7 +17,10 @@ const App = {
         simulation: SimulationPage,
         knowledge: KnowledgePage,
         'env-monitor': EnvMonitorPage,
-        cost: CostPage
+        cost: CostPage,
+        camera: CameraPage,
+        'patrol-group': PatrolGroupPage,
+        'video-wall': VideoWallPage
     },
 
     init() {
@@ -139,7 +142,10 @@ const App = {
             simulation: '数据模拟',
             knowledge: '知识库',
             'env-monitor': '环境监测',
-            cost: '成本核算'
+            cost: '成本核算',
+            camera: '摄像头档案管理',
+            'patrol-group': '巡视分组管理',
+            'video-wall': '视频监控墙'
         };
         document.getElementById('pageTitle').textContent = titles[page] || page;
         document.title = `${titles[page] || page} - 生产线监控系统`;

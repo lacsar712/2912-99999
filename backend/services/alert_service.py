@@ -205,6 +205,12 @@ class AlertService:
         db.session.add(alert)
         db.session.commit()
 
+        try:
+            from services.video_monitor_service import CaptureRecordService
+            CaptureRecordService.create_alert_capture(alert.id, alert.equipment_id)
+        except Exception as e:
+            print(f"[AlertCapture] Auto capture failed: {e}")
+
         return Response.success(alert.to_dict())
 
     @staticmethod
