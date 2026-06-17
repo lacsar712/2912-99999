@@ -28,6 +28,7 @@ from controllers.knowledge_controller import knowledge_bp
 from controllers.env_monitor_controller import env_monitor_bp
 from controllers.cost_controller import cost_bp
 from controllers.video_monitor_controller import video_monitor_bp
+from controllers.sop_controller import sop_bp
 
 # 请求限制器 - 默认配置
 limiter = None
@@ -159,6 +160,7 @@ def create_app(config_class=Config):
     app.register_blueprint(env_monitor_bp, url_prefix='/api/env-monitor')
     app.register_blueprint(cost_bp, url_prefix='/api/cost')
     app.register_blueprint(video_monitor_bp, url_prefix='/api/video-monitor')
+    app.register_blueprint(sop_bp, url_prefix='/api/sop')
 
     # 启动后台调度线程（非测试环境）
     if not app.config.get('TESTING'):

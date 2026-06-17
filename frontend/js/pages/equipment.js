@@ -306,7 +306,7 @@ const EquipmentPage = {
             if (response.code === 200) {
                 const eq = response.data;
                 const line = this.productionLines.find(l => l.id === eq.line_id);
-                
+
                 const sensorsHtml = (eq.sensors || []).map(s => `
                     <tr>
                         <td>${s.sensor_code || '-'}</td>
@@ -317,36 +317,65 @@ const EquipmentPage = {
                     </tr>
                 `).join('') || '<tr><td colspan="5" style="text-align: center;">暂无传感器</td></tr>';
 
-                await Modal.alert(`
-                    <div class="detail-section">
-                        <h4>基本信息</h4>
-                        <table class="detail-table">
-                            <tr><td>设备编号</td><td>${eq.equipment_code}</td></tr>
-                            <tr><td>设备名称</td><td>${eq.equipment_name}</td></tr>
-                            <tr><td>设备类型</td><td>${eq.equipment_type || '-'}</td></tr>
-                            <tr><td>所属生产线</td><td>${line ? (line.line_name || line.line_code) : '-'}</td></tr>
-                            <tr><td>型号</td><td>${eq.model || '-'}</td></tr>
-                            <tr><td>制造商</td><td>${eq.manufacturer || '-'}</td></tr>
-                            <tr><td>状态</td><td><span class="status-badge ${eq.status}">${this.getStatusText(eq.status)}</span></td></tr>
-                        </table>
+                const modalHtml = `
+                    <div class="safety-tab-bar">
+                        <div class="safety-tab active" data-eqtab="basic">基本信息</div>
+                        <div class="safety-tab" data-eqtab="sensors">传感器</div>
+                        <div class="safety-tab" data-eqtab="sop">适用SOP</div>
                     </div>
-                    <div class="detail-section" style="margin-top: 20px;">
-                        <h4>运行参数</h4>
-                        <table class="detail-table">
-                            <tr><td>温度</td><td>${eq.temperature ? parseFloat(eq.temperature).toFixed(2) + ' ℃' : '-'}</td></tr>
-                            <tr><td>压力</td><td>${eq.pressure ? parseFloat(eq.pressure).toFixed(2) + ' MPa' : '-'}</td></tr>
-                            <tr><td>速度</td><td>${eq.speed ? parseFloat(eq.speed).toFixed(2) + ' rpm' : '-'}</td></tr>
-                            <tr><td>运行时长</td><td>${eq.runtime_hours ? parseFloat(eq.runtime_hours).toFixed(1) + ' 小时' : '-'}</td></tr>
-                        </table>
+                    <div id="eqDetailTabContent" style="margin-top:16px;">
+                        <div class="eq-tab-panel" data-eqpanel="basic">
+                            <div class="detail-section">
+                                <h4>基本信息</h4>
+                                <table class="detail-table">
+                                    <tr><td>设备编号</td><td>${eq.equipment_code}</td></tr>
+                                    <tr><td>设备名称</td><td>${eq.equipment_name}</td></tr>
+                                    <tr><td>设备类型</td><td>${eq.equipment_type || '-'}</td></tr>
+                                    <tr><td>所属生产线</td><td>${line ? (line.line_name || line.line_code) : '-'}</td></tr>
+                                    <tr><td>型号</td><td>${eq.model || '-'}</td></tr>
+                                    <tr><td>制造商</td><td>${eq.manufacturer || '-'}</td></tr>
+                                    <tr><td>状态</td><td><span class="status-badge ${eq.status}">${this.getStatusText(eq.status)}</span></td></tr>
+                                </table>
+                            </div>
+                            <div class="detail-section" style="margin-top: 20px;">
+                                <h4>运行参数</h4>
+                                <table class="detail-table">
+                                    <tr><td>温度</td><td>${eq.temperature ? parseFloat(eq.temperature).toFixed(2) + ' ℃' : '-'}</td></tr>
+                                    <tr><td>压力</td><td>${eq.pressure ? parseFloat(eq.pressure).toFixed(2) + ' MPa' : '-'}</td></tr>
+                                    <tr><td>速度</td><td>${eq.speed ? parseFloat(eq.speed).toFixed(2) + ' rpm' : '-'}</td></tr>
+                                    <tr><td>运行时长</td><td>${eq.runtime_hours ? parseFloat(eq.runtime_hours).toFixed(1) + ' 小时' : '-'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="eq-tab-panel" data-eqpanel="sensors" style="display:none;">
+                            <table class="data-table">
+                                <thead><tr><th>编号</th><th>名称</th><th>类型</th><th>当前值</th><th>状态</th></tr></thead>
+                                <tbody>${sensorsHtml}</tbody>
+                            </table>
+                        </div>
+                        <div class="eq-tab-panel" data-eqpanel="sop" style="display:none;">
+                            <div id="eqSopList" style="min-height:100px;">
+                                <div style="text-align:center;padding:20px;color:var(--text-secondary);">加载中...</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="detail-section" style="margin-top: 20px;">
-                        <h4>传感器列表</h4>
-                        <table class="data-table">
-                            <thead><tr><th>编号</th><th>名称</th><th>类型</th><th>当前值</th><th>状态</th></tr></thead>
-                            <tbody>${sensorsHtml}</tbody>
-                        </table>
-                    </div>
-                `, '设备详情');
+                `;
+
+                await Modal.alert(modalHtml, '设备详情');
+
+                document.querySelectorAll('.safety-tab[data-eqtab]').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.safety-tab[data-eqtab]').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        const tabKey = tab.dataset.eqtab;
+                        document.querySelectorAll('.eq-tab-panel').forEach(p => {
+                            p.style.display = (p.dataset.eqpanel === tabKey) ? 'block' : 'none';
+                        });
+                        if (tabKey === 'sop') {
+                            this._loadEquipmentSOPs(id);
+                        }
+                    });
+                });
             } else {
                 Toast.error(response.message || '获取详情失败');
             }
@@ -354,6 +383,55 @@ const EquipmentPage = {
             console.error('获取设备详情失败:', error);
             Toast.error('获取设备详情失败');
         }
+    },
+
+    async _loadEquipmentSOPs(equipmentId) {
+        const container = document.getElementById('eqSopList');
+        if (!container) return;
+        try {
+            const res = await SOPService.getSOPsByEquipment(equipmentId);
+            if (res.code === 200) {
+                const sops = res.data || [];
+                if (sops.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);">该设备暂无适用的SOP</div>';
+                } else {
+                    const statusBadge = (s) => {
+                        const map = { draft: '草稿', published: '已发布', deprecated: '已废弃' };
+                        const color = s === 'published' ? 'background:rgba(40,167,69,.1);color:#28a745' : (s === 'deprecated' ? 'background:rgba(220,53,69,.1);color:#dc3545' : 'background:rgba(255,193,7,.1);color:#856404');
+                        return `<span class="status-badge" style="${color}">${map[s] || s}</span>`;
+                    };
+                    container.innerHTML = `
+                        <table class="data-table">
+                            <thead><tr><th>编号</th><th>名称</th><th>适用产品</th><th>版本</th><th>状态</th><th>步骤数</th></tr></thead>
+                            <tbody>
+                                ${sops.map(s => `
+                                    <tr style="cursor:pointer;" onclick="EquipmentPage._openSOPFromEquipment(${s.id})">
+                                        <td>${s.sop_code || '-'}</td>
+                                        <td>${s.sop_name || '-'}</td>
+                                        <td>${s.applicable_product || '-'}</td>
+                                        <td>v${s.version || '1.0'}</td>
+                                        <td>${statusBadge(s.status)}</td>
+                                        <td>${s.step_count || 0}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">点击行可跳转到SOP管理页面查看</div>
+                    `;
+                }
+            }
+        } catch (e) {
+            container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--danger-color);">加载失败</div>';
+        }
+    },
+
+    _openSOPFromEquipment(sopId) {
+        window.location.hash = 'sop';
+        setTimeout(() => {
+            if (window.SOPPage) {
+                SOPPage._viewSOP(sopId);
+            }
+        }, 200);
     },
 
     async controlEquipment(id, action) {

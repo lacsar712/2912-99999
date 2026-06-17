@@ -20,7 +20,8 @@ const App = {
         cost: CostPage,
         camera: CameraPage,
         'patrol-group': PatrolGroupPage,
-        'video-wall': VideoWallPage
+        'video-wall': VideoWallPage,
+        sop: SOPPage
     },
 
     init() {
@@ -145,7 +146,8 @@ const App = {
             cost: '成本核算',
             camera: '摄像头档案管理',
             'patrol-group': '巡视分组管理',
-            'video-wall': '视频监控墙'
+            'video-wall': '视频监控墙',
+            sop: 'SOP标准作业管理'
         };
         document.getElementById('pageTitle').textContent = titles[page] || page;
         document.title = `${titles[page] || page} - 生产线监控系统`;
