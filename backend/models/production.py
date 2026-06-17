@@ -119,6 +119,10 @@ class ProductionTask(BaseModel):
     actual_start_time = db.Column(db.DateTime, comment='实际开始时间')
     actual_end_time = db.Column(db.DateTime, comment='实际结束时间')
 
+    # 关联
+    line = db.relationship('ProductionLine', backref='tasks_rel', lazy='joined')
+    production_records = db.relationship('ProductionRecord', backref='task', lazy='dynamic')
+
     def get_progress(self):
         """获取进度百分比"""
         if self.quantity and self.quantity > 0:

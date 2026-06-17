@@ -135,6 +135,13 @@ def get_tasks():
     return TaskService.get_tasks(page, size, line_id, status)
 
 
+@production_bp.route('/tasks/<int:task_id>', methods=['GET'])
+@login_required
+def get_task(task_id):
+    """获取任务详情"""
+    return TaskService.get_task_by_id(task_id)
+
+
 @production_bp.route('/tasks', methods=['POST'])
 @login_required
 def create_task():

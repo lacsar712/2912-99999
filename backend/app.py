@@ -26,6 +26,7 @@ from controllers.maintenance_controller import maintenance_bp
 from controllers.disposal_controller import disposal_bp
 from controllers.knowledge_controller import knowledge_bp
 from controllers.env_monitor_controller import env_monitor_bp
+from controllers.cost_controller import cost_bp
 
 # 请求限制器 - 默认配置
 limiter = None
@@ -96,6 +97,27 @@ def create_app(config_class=Config):
         except Exception as e:
             print(f"[Env Monitor] Failed to init default standards: {e}")
 
+        # 初始化成本核算默认要素
+        from services.cost_service import CostElementService
+        try:
+            result = CostElementService.init_default_elements()
+            result_data = result[0].get_json() if hasattr(result[0], 'get_json') else {}
+            created = result_data.get('data', {}).get('created', 0)
+            print(f"[Cost] Default cost elements initialized, created {created} new elements")
+        except Exception as e:
+            print(f"[Cost] Failed to init default cost elements: {e}")
+
+        # 初始化示例成本数据
+        from services.cost_service import CostRecordService
+        try:
+            result = CostRecordService.init_sample_data()
+            result_data = result[0].get_json() if hasattr(result[0], 'get_json') else {}
+            created = result_data.get('data', {}).get('created', 0)
+            if created > 0:
+                print(f"[Cost] Sample cost data initialized, created {created} new records")
+        except Exception as e:
+            print(f"[Cost] Failed to init sample cost data: {e}")
+
     # 启用跨域
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -134,6 +156,7 @@ def create_app(config_class=Config):
     app.register_blueprint(disposal_bp, url_prefix='/api/disposal')
     app.register_blueprint(knowledge_bp, url_prefix='/api/knowledge')
     app.register_blueprint(env_monitor_bp, url_prefix='/api/env-monitor')
+    app.register_blueprint(cost_bp, url_prefix='/api/cost')
 
     # 启动后台调度线程（非测试环境）
     if not app.config.get('TESTING'):

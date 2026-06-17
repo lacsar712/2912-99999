@@ -300,6 +300,22 @@ class TaskService:
         return Response.paginate(items, pagination.total, page, size)
 
     @staticmethod
+    def get_task_by_id(task_id):
+        """获取任务详情"""
+        task = ProductionTask.get_by_id(task_id)
+        if not task:
+            return Response.not_found('任务不存在')
+
+        task_dict = task.to_dict()
+        if task.line:
+            task_dict['line_name'] = task.line.line_name if task.line else None
+        if task.production_records.count() > 0:
+            records = task.production_records.order_by(ProductionRecord.record_time.desc()).all()
+            task_dict['production_records'] = [r.to_dict() for r in records]
+
+        return Response.success(task_dict)
+
+    @staticmethod
     def create_task(data):
         """创建任务"""
         validation = Validator.validate_form(data, {
@@ -372,6 +388,20 @@ class TaskService:
             task.save()
             Log.add_log(g.user_id, g.username, 'update', 'production_task',
                        f'更新任务状态: {task.task_name} ({current_status} -> {new_status})')
+
+            if new_status == 'completed':
+                from services.cost_service import CostRecordService
+                try:
+                    auto_result = CostRecordService.calculate_task_cost(task.id)
+                    auto_result_data = auto_result[0].get_json() if hasattr(auto_result[0], 'get_json') else {}
+                    result_data = task.to_dict()
+                    result_data['cost_calculation'] = auto_result_data.get('data', {})
+                    return Response.success(result_data, auto_result_data.get('message', '状态更新成功，成本初算已触发'))
+                except Exception as ce:
+                    result_data = task.to_dict()
+                    result_data['cost_calculation'] = {'error': str(ce)}
+                    return Response.success(result_data, f'状态更新成功，但成本初算失败: {str(ce)}')
+
             return Response.success(task.to_dict(), '状态更新成功')
         except Exception as e:
             db.session.rollback()

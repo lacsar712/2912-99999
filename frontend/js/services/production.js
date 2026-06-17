@@ -58,6 +58,10 @@ const ProductionService = {
         return await Request.get('/production/tasks', params);
     },
 
+    async getTask(id) {
+        return await Request.get(`/production/tasks/${id}`);
+    },
+
     async createTask(data) {
         return await Request.post('/production/tasks', data);
     },

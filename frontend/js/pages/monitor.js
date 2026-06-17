@@ -13,9 +13,17 @@ const MonitorPage = {
 
     async loadDashboard() {
         try {
-            const response = await ProductionService.getDashboard();
-            if (response.code === 200) {
-                this.renderDashboard(response.data);
+            const [prodResponse, costResponse] = await Promise.all([
+                ProductionService.getDashboard(),
+                CostService.getDashboardCost().catch(() => ({ code: 500, data: null }))
+            ]);
+            
+            if (prodResponse.code === 200) {
+                const data = prodResponse.data;
+                if (costResponse.code === 200) {
+                    data.cost = costResponse.data;
+                }
+                this.renderDashboard(data);
             }
         } catch (error) {
             console.error('加载监控数据失败:', error);
@@ -24,6 +32,10 @@ const MonitorPage = {
 
     renderDashboard(data) {
         const container = document.getElementById('pageContainer');
+
+        const cost = data.cost || {};
+        const yoyClass = cost.yoy > 0 ? 'text-danger' : cost.yoy < 0 ? 'text-success' : 'text-muted';
+        const yoyIcon = cost.yoy > 0 ? '↑' : cost.yoy < 0 ? '↓' : '-';
 
         container.innerHTML = `
             <div class="stat-cards">
@@ -57,6 +69,22 @@ const MonitorPage = {
                     <div class="stat-card-value">${data.tasks.in_progress}/${data.tasks.total}</div>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
                         进行中/总计
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(255, 193, 7, 0.1);">💰</div>
+                    <div class="stat-card-title">本月总成本</div>
+                    <div class="stat-card-value" style="font-size: 22px;">¥${Formatter.formatNumber(cost.month_total || 0)}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                        当月累计支出
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(108, 117, 125, 0.1);">📊</div>
+                    <div class="stat-card-title">成本同比</div>
+                    <div class="stat-card-value ${yoyClass}" style="font-size: 22px;">${cost.yoy !== null && cost.yoy !== undefined ? `${yoyIcon} ${Math.abs(cost.yoy)}%` : '-'}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                        较去年同月 ${cost.yoy_last_year !== null && cost.yoy_last_year !== undefined ? `(¥${Formatter.formatNumber(cost.yoy_last_year || 0)})` : ''}
                     </div>
                 </div>
             </div>

@@ -313,6 +313,95 @@ INSERT INTO production_task (task_code, task_name, line_id, product_name, produc
 ON DUPLICATE KEY UPDATE task_code = task_code;
 
 -- ============================================
+-- 成本要素字典表
+-- ============================================
+CREATE TABLE IF NOT EXISTS cost_element (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    element_code VARCHAR(50) NOT NULL COMMENT '要素编码',
+    element_name VARCHAR(100) NOT NULL COMMENT '要素名称',
+    element_type ENUM('material', 'labor', 'depreciation', 'energy', 'other') DEFAULT 'other' COMMENT '要素类型: material原材料/labor人工/depreciation设备折旧/energy能源/other其他',
+    unit VARCHAR(20) COMMENT '计量单位',
+    price DECIMAL(12,2) DEFAULT 0 COMMENT '单价(元)',
+    description TEXT COMMENT '描述',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    status TINYINT DEFAULT 1 COMMENT '状态: 0删除/1正常',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_element_code (element_code),
+    INDEX idx_element_type (element_type),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='成本要素字典表';
+
+-- ============================================
+-- 成本登记表
+-- ============================================
+CREATE TABLE IF NOT EXISTS cost_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    record_code VARCHAR(50) NOT NULL COMMENT '登记编号',
+    task_id BIGINT COMMENT '关联生产任务ID',
+    element_id BIGINT COMMENT '成本要素ID',
+    quantity DECIMAL(12,2) DEFAULT 0 COMMENT '数量',
+    unit_price DECIMAL(12,2) DEFAULT 0 COMMENT '单价(元)',
+    amount DECIMAL(12,2) DEFAULT 0 COMMENT '总金额(元)',
+    remark TEXT COMMENT '备注',
+    register_by VARCHAR(50) COMMENT '登记人',
+    record_date DATE COMMENT '登记日期',
+    source ENUM('manual', 'auto') DEFAULT 'manual' COMMENT '来源: manual手工/auto自动折算',
+    status TINYINT DEFAULT 1 COMMENT '状态: 0删除/1正常',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_record_code (record_code),
+    INDEX idx_task_id (task_id),
+    INDEX idx_element_id (element_id),
+    INDEX idx_record_date (record_date),
+    INDEX idx_status (status),
+    CONSTRAINT fk_cost_record_task FOREIGN KEY (task_id) REFERENCES production_task(id) ON DELETE SET NULL,
+    CONSTRAINT fk_cost_record_element FOREIGN KEY (element_id) REFERENCES cost_element(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='成本登记表';
+
+-- ============================================
+-- 成本汇总表
+-- ============================================
+CREATE TABLE IF NOT EXISTS cost_summary (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    task_id BIGINT NOT NULL COMMENT '生产任务ID',
+    total_material DECIMAL(12,2) DEFAULT 0 COMMENT '原材料总成本',
+    total_labor DECIMAL(12,2) DEFAULT 0 COMMENT '人工总成本',
+    total_depreciation DECIMAL(12,2) DEFAULT 0 COMMENT '设备折旧总成本',
+    total_energy DECIMAL(12,2) DEFAULT 0 COMMENT '能源总成本',
+    total_other DECIMAL(12,2) DEFAULT 0 COMMENT '其他总成本',
+    total_amount DECIMAL(12,2) DEFAULT 0 COMMENT '总成本',
+    unit_cost DECIMAL(12,4) DEFAULT 0 COMMENT '单位成本',
+    auto_calculated BOOLEAN DEFAULT FALSE COMMENT '是否自动计算',
+    missing_elements TEXT COMMENT '缺失的要素(提示用户补录)',
+    status TINYINT DEFAULT 1 COMMENT '状态: 0删除/1正常',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_task_id (task_id),
+    INDEX idx_status (status),
+    CONSTRAINT fk_cost_summary_task FOREIGN KEY (task_id) REFERENCES production_task(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='成本汇总表';
+
+-- 插入默认成本要素
+INSERT INTO cost_element (element_code, element_name, element_type, unit, price, sort_order) VALUES
+('MAT001', '钢材', 'material', 'kg', 5.50, 1),
+('MAT002', '塑料颗粒', 'material', 'kg', 12.00, 2),
+('MAT003', '电子元件', 'material', '个', 8.50, 3),
+('MAT004', '润滑油', 'material', 'L', 45.00, 4),
+('LAB001', '操作工人工时', 'labor', '小时', 35.00, 10),
+('LAB002', '技术员工时', 'labor', '小时', 60.00, 11),
+('LAB003', '管理人员工时', 'labor', '小时', 80.00, 12),
+('DEP001', '设备折旧-机器人', 'depreciation', '小时', 25.00, 20),
+('DEP002', '设备折旧-包装机', 'depreciation', '小时', 15.00, 21),
+('DEP003', '设备折旧-检测仪', 'depreciation', '小时', 10.00, 22),
+('ENG001', '电力消耗', 'energy', 'kWh', 0.85, 30),
+('ENG002', '水资源消耗', 'energy', 'm³', 5.20, 31),
+('ENG003', '天然气消耗', 'energy', 'm³', 3.50, 32),
+('OTH001', '包装材料', 'other', '套', 2.50, 40),
+('OTH002', '运输费用', 'other', '次', 200.00, 41)
+ON DUPLICATE KEY UPDATE element_code = element_code;
+
+-- ============================================
 -- 创建视图
 -- ============================================
 
