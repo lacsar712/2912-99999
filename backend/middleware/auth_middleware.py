@@ -33,6 +33,10 @@ class AuthMiddleware:
         if request.path in self.EXCLUDE_PATHS:
             return
 
+        # 健康检查端点（容器探针、监控面板）无需认证
+        if request.path.startswith('/api/health'):
+            return
+
         # 检查是否是静态文件
         if request.path.startswith('/static'):
             return

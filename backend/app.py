@@ -173,6 +173,7 @@ def create_app(config_class=Config):
     app.register_blueprint(video_monitor_bp, url_prefix='/api/video-monitor')
     app.register_blueprint(sop_bp, url_prefix='/api/sop')
     app.register_blueprint(health_bp, url_prefix='/api/health')
+    limiter.exempt(health_bp)
 
     # 启动后台调度线程（非测试环境）
     if not app.config.get('TESTING'):

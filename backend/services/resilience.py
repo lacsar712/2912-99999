@@ -69,15 +69,14 @@ class ComponentHealthChecker:
     @staticmethod
     def check_simulation() -> Dict[str, Any]:
         try:
-            from services.equipment_sim.scheduler import RefreshScheduler
-            from services.equipment_simulation_service import EquipmentSimulationService
-
-            svc = EquipmentSimulationService._get_instance()
-            scheduler_running = svc.scheduler.is_running if svc and svc.scheduler else False
+            scheduler_running = any(
+                t.name == "main-scheduler" and t.is_alive()
+                for t in threading.enumerate()
+            )
             return {
                 "status": "healthy" if scheduler_running else "degraded",
                 "component": "simulation",
-                "detail": None if scheduler_running else "scheduler not running",
+                "detail": None if scheduler_running else "simulation scheduler not running",
             }
         except Exception as e:
             return {"status": "unhealthy", "component": "simulation", "detail": str(e)}
