@@ -7,8 +7,12 @@ const MonitorPage = {
 
     init() {
         this.loadDashboard();
+        this.loadSystemHealth();
         // 每30秒自动刷新
-        this.refreshInterval = setInterval(() => this.loadDashboard(), 30000);
+        this.refreshInterval = setInterval(() => {
+            this.loadDashboard();
+            this.loadSystemHealth();
+        }, 30000);
     },
 
     async loadDashboard() {
@@ -158,6 +162,30 @@ const MonitorPage = {
                     </div>
                 </div>
             </div>
+
+            <div class="grid grid-2" style="margin-top: 20px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">系统运行状态</h3>
+                        <button class="btn btn-sm btn-outline" onclick="MonitorPage.loadSystemHealth()">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="systemHealthPanel">
+                            <div class="loading-text">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">自愈记录</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="selfHealLogPanel" style="max-height: 320px; overflow-y: auto;">
+                            <div class="loading-text">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
 
         this.loadProductionLines();
@@ -302,6 +330,131 @@ const MonitorPage = {
             'offline': '离线'
         };
         return statusMap[status] || status;
+    },
+
+    async loadSystemHealth() {
+        try {
+            const [healthRes, healLogRes] = await Promise.all([
+                HealthService.getFullHealth(),
+                HealthService.getHealLog()
+            ]);
+            this.renderSystemHealth(healthRes);
+            this.renderSelfHealLog(healLogRes);
+        } catch (error) {
+            console.error('加载系统健康状态失败:', error);
+            const panel = document.getElementById('systemHealthPanel');
+            if (panel) {
+                panel.innerHTML = '<p class="empty-text">无法获取系统健康状态</p>';
+            }
+        }
+    },
+
+    renderSystemHealth(healthRes) {
+        const panel = document.getElementById('systemHealthPanel');
+        if (!panel) return;
+
+        const status = healthRes.status || 'unknown';
+        const components = healthRes.components || {};
+        const degraded = healthRes.degraded_components || [];
+
+        const statusConfig = {
+            healthy: { label: '正常', color: '#28a745', bg: 'rgba(40,167,69,0.1)' },
+            degraded: { label: '降级', color: '#ffc107', bg: 'rgba(255,193,7,0.1)' },
+            unhealthy: { label: '故障', color: '#dc3545', bg: 'rgba(220,53,69,0.1)' },
+            unknown: { label: '未知', color: '#6c757d', bg: 'rgba(108,117,125,0.1)' },
+        };
+        const overall = statusConfig[status] || statusConfig.unknown;
+
+        const componentNames = {
+            database: '数据库',
+            redis: '缓存服务',
+            simulation: '模拟引擎'
+        };
+        const componentIcons = {
+            database: '🗄️',
+            redis: '⚡',
+            simulation: '🧪'
+        };
+
+        let html = `
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 12px; background: ${overall.bg}; border-radius: 8px; border-left: 4px solid ${overall.color};">
+                <div style="width: 16px; height: 16px; border-radius: 50%; background: ${overall.color}; ${status === 'healthy' ? 'animation: vw-pulse 2s infinite; box-shadow: 0 0 0 0 rgba(40,167,69,0.6);' : ''}"></div>
+                <div>
+                    <div style="font-weight: 600; color: ${overall.color};">系统状态: ${overall.label}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${degraded.length > 0 ? '降级组件: ' + degraded.map(c => componentNames[c] || c).join(', ') : '所有组件运行正常'}</div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+        `;
+
+        for (const [key, info] of Object.entries(components)) {
+            const compStatus = info.status || 'unknown';
+            const compConfig = statusConfig[compStatus] || statusConfig.unknown;
+            const name = componentNames[key] || key;
+            const icon = componentIcons[key] || '📦';
+            const detail = info.detail || '';
+
+            html += `
+                <div style="padding: 16px; background: var(--bg-light); border-radius: 8px; text-align: center; border: 2px solid ${compConfig.color}20;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">${icon}</div>
+                    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${name}</div>
+                    <div style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; background: ${compConfig.bg}; color: ${compConfig.color};">
+                        ${compConfig.label}
+                    </div>
+                    ${detail ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; word-break: break-all;">${Validator.sanitize(detail).substring(0, 60)}</div>` : ''}
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        panel.innerHTML = html;
+    },
+
+    renderSelfHealLog(healLogRes) {
+        const panel = document.getElementById('selfHealLogPanel');
+        if (!panel) return;
+
+        const records = healLogRes?.data?.records || [];
+        if (records.length === 0) {
+            panel.innerHTML = '<p class="empty-text">暂无自愈记录</p>';
+            return;
+        }
+
+        const eventIcons = {
+            down: '🔴',
+            degraded: '🟡',
+            recovered: '🟢',
+            request_blocked: '🚫',
+        };
+        const componentNames = {
+            database: '数据库',
+            redis: '缓存服务',
+            simulation: '模拟引擎'
+        };
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+        const displayRecords = records.slice().reverse().slice(0, 20);
+        for (const record of displayRecords) {
+            const icon = eventIcons[record.event] || 'ℹ️';
+            const compName = componentNames[record.component] || record.component;
+            const time = record.timestamp ? record.timestamp.replace('T', ' ').substring(0, 19) : '';
+            const eventLabel = { down: '故障', degraded: '降级', recovered: '恢复', request_blocked: '请求拦截' }[record.event] || record.event;
+
+            html += `
+                <div style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: var(--bg-light); border-radius: 6px; font-size: 13px;">
+                    <span style="font-size: 16px; flex-shrink: 0;">${icon}</span>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                            <span style="font-weight: 500;">${compName} · ${eventLabel}</span>
+                            <span style="font-size: 11px; color: var(--text-muted); flex-shrink: 0; margin-left: 8px;">${time}</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); word-break: break-all;">${Validator.sanitize(record.detail || '')}</div>
+                    </div>
+                </div>
+            `;
+        }
+        html += '</div>';
+        panel.innerHTML = html;
     },
 
     destroy() {

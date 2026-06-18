@@ -29,6 +29,7 @@ from controllers.env_monitor_controller import env_monitor_bp
 from controllers.cost_controller import cost_bp
 from controllers.video_monitor_controller import video_monitor_bp
 from controllers.sop_controller import sop_bp
+from controllers.health_controller import health_bp
 
 # 请求限制器 - 默认配置
 limiter = None
@@ -49,28 +50,36 @@ def start_scheduler(app):
             from services.training_service import TrainingService
             from services.spare_service import SparePartService
             from services.env_monitor_service import EnvMonitorService
+            from services.resilience import DegradationManager
             from utils.logger import logger
             counter = 0
             while True:
                 try:
-                    # 每5分钟生成环境监测模拟数据
-                    logger.info(f"Scheduler running - env monitor simulation at {datetime.now()}")
-                    try:
-                        EnvMonitorService.generate_simulated_readings({
-                            'interval': 5,
-                            'abnormal_probability': 0.05
-                        })
-                    except Exception as e:
-                        logger.warning(f"Env monitor simulation error: {e}")
-                    
+                    dm = DegradationManager.get_instance()
+                    db_available = dm.is_database_available()
+
+                    if not db_available:
+                        logger.warning("Scheduler: database unavailable, skipping write operations")
+                    else:
+                        logger.info(f"Scheduler running - env monitor simulation at {datetime.now()}")
+                        try:
+                            EnvMonitorService.generate_simulated_readings({
+                                'interval': 5,
+                                'abnormal_probability': 0.05
+                            })
+                        except Exception as e:
+                            logger.warning(f"Env monitor simulation error: {e}")
+
                     counter += 1
-                    # 每12小时（144个5分钟周期）执行一次其他检查
                     if counter % 144 == 0:
-                        logger.info(f"Scheduler running - certificate check at {datetime.now()}")
-                        TrainingService.check_expiring_certificates(30)
-                        TrainingService.check_all_qualifications()
-                        logger.info(f"Scheduler running - spare low stock check at {datetime.now()}")
-                        SparePartService.check_all_low_stock()
+                        if not db_available:
+                            logger.warning("Scheduler: database unavailable, skipping certificate/spare checks")
+                        else:
+                            logger.info(f"Scheduler running - certificate check at {datetime.now()}")
+                            TrainingService.check_expiring_certificates(30)
+                            TrainingService.check_all_qualifications()
+                            logger.info(f"Scheduler running - spare low stock check at {datetime.now()}")
+                            SparePartService.check_all_low_stock()
                         counter = 0
                 except Exception as e:
                     logger.error(f"Scheduler task error: {e}")
@@ -163,6 +172,7 @@ def create_app(config_class=Config):
     app.register_blueprint(cost_bp, url_prefix='/api/cost')
     app.register_blueprint(video_monitor_bp, url_prefix='/api/video-monitor')
     app.register_blueprint(sop_bp, url_prefix='/api/sop')
+    app.register_blueprint(health_bp, url_prefix='/api/health')
 
     # 启动后台调度线程（非测试环境）
     if not app.config.get('TESTING'):
@@ -171,15 +181,30 @@ def create_app(config_class=Config):
         except Exception as e:
             print(f"[Training Scheduler] Failed to start: {e}")
 
+        try:
+            from services.resilience import start_resilience_monitor
+            start_resilience_monitor(app, interval=15)
+        except Exception as e:
+            print(f"[Resilience Monitor] Failed to start: {e}")
+
     # 健康检查
     @app.route('/health')
     @limiter.exempt
     def health_check():
-        return jsonify({
-            'status': 'healthy',
+        from services.resilience import ComponentHealthChecker, DegradationManager
+        check = ComponentHealthChecker.check_all()
+        dm = DegradationManager.get_instance()
+        degraded = dm.get_degraded_components()
+        status = check["status"]
+        payload = {
+            'status': status,
             'service': 'production-monitoring-system',
-            'version': '1.0.0'
-        })
+            'version': '1.0.0',
+            'components': check["components"],
+            'degraded_components': degraded,
+        }
+        code = 200 if status != "unhealthy" else 503
+        return jsonify(payload), code
 
     # 根路径
     @app.route('/')
