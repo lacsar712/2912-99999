@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS t_user (
     password VARCHAR(255) NOT NULL COMMENT '密码(BCrypt加密)',
     email VARCHAR(100) COMMENT '邮箱',
     role ENUM('admin', 'user') DEFAULT 'user' COMMENT '角色',
+    position VARCHAR(100) COMMENT '岗位',
     status TINYINT DEFAULT 1 COMMENT '状态: 0禁用/1启用',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

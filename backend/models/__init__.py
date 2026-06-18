@@ -34,6 +34,32 @@ from .knowledge import (
     KnowledgeComment,
     KnowledgeLike
 )
+from .training import (
+    TrainingCourse,
+    TrainingPlan,
+    TrainingAttendance,
+    QualificationCertificate,
+    PositionQualification
+)
+from .spare import SparePart, SpareInbound, SpareOutbound, SpareInventory
+from .maintenance import MaintenanceWorkOrder
+from .env_monitor import EnvArea, EnvMonitorPoint, EnvReading, EnvStandard
+from .cost import CostElement, CostRecord, CostSummary
+from .video_monitor import (
+    Camera,
+    CameraEquipmentRelation,
+    PatrolGroup,
+    PatrolGroupCamera,
+    CaptureRecord
+)
+from .sop import (
+    SOPDocument,
+    SOPStep,
+    SOPVersion,
+    SOPTrainingRelation,
+    SOPChecklist,
+    SOPChecklistItem
+)
 
 __all__ = [
     'BaseModel',
@@ -60,5 +86,33 @@ __all__ = [
     'KnowledgeDocument',
     'KnowledgeVersion',
     'KnowledgeComment',
-    'KnowledgeLike'
+    'KnowledgeLike',
+    'TrainingCourse',
+    'TrainingPlan',
+    'TrainingAttendance',
+    'QualificationCertificate',
+    'PositionQualification',
+    'SparePart',
+    'SpareInbound',
+    'SpareOutbound',
+    'SpareInventory',
+    'MaintenanceWorkOrder',
+    'EnvArea',
+    'EnvMonitorPoint',
+    'EnvReading',
+    'EnvStandard',
+    'CostElement',
+    'CostRecord',
+    'CostSummary',
+    'Camera',
+    'CameraEquipmentRelation',
+    'PatrolGroup',
+    'PatrolGroupCamera',
+    'CaptureRecord',
+    'SOPDocument',
+    'SOPStep',
+    'SOPVersion',
+    'SOPTrainingRelation',
+    'SOPChecklist',
+    'SOPChecklistItem',
 ]

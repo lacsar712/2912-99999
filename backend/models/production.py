@@ -119,8 +119,7 @@ class ProductionTask(BaseModel):
     actual_start_time = db.Column(db.DateTime, comment='实际开始时间')
     actual_end_time = db.Column(db.DateTime, comment='实际结束时间')
 
-    # 关联
-    line = db.relationship('ProductionLine', backref='tasks_rel', lazy='joined')
+    # 关联（production_line 由 ProductionLine.tasks 的 backref 提供）
     production_records = db.relationship('ProductionRecord', backref='task', lazy='dynamic')
 
     def get_progress(self):
@@ -142,8 +141,8 @@ class ProductionRecord(BaseModel):
     """生产数据记录模型"""
     __tablename__ = 'production_record'
 
-    equipment_id = db.Column(db.BigInteger, nullable=False, comment='设备ID')
-    task_id = db.Column(db.BigInteger, comment='任务ID')
+    equipment_id = db.Column(db.BigInteger, db.ForeignKey('equipment.id'), nullable=False, comment='设备ID')
+    task_id = db.Column(db.BigInteger, db.ForeignKey('production_task.id'), comment='任务ID')
     product_count = db.Column(db.Integer, default=0, comment='生产数量')
     qualified_count = db.Column(db.Integer, default=0, comment='合格数量')
     defect_count = db.Column(db.Integer, default=0, comment='缺陷数量')

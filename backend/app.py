@@ -95,7 +95,9 @@ def create_app(config_class=Config):
         from services.env_monitor_service import EnvMonitorService
         try:
             result = EnvMonitorService.init_default_standards()
-            print(f"[Env Monitor] {result.get('message', 'Default standards initialized')}")
+            result_data = result[0].get_json() if hasattr(result[0], 'get_json') else {}
+            created = result_data.get('data', {}).get('created_count', 0)
+            print(f"[Env Monitor] {result_data.get('message', 'Default standards initialized')}, created {created} new standards")
         except Exception as e:
             print(f"[Env Monitor] Failed to init default standards: {e}")
 
@@ -190,10 +192,8 @@ def create_app(config_class=Config):
     return app
 
 
-if __name__ == '__main__':
-    app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-# 创建Flask应用实例供gunicorn使用
+# 创建Flask应用实例供 gunicorn 及本地开发使用
 app = create_app()
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)

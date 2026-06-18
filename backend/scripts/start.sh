@@ -25,6 +25,7 @@ fi
 # 启动Gunicorn
 echo "启动Gunicorn服务器..."
 exec gunicorn -w 4 -b 0.0.0.0:5000 \
+    --preload \
     --access-logfile - \
     --error-logfile - \
     app:app

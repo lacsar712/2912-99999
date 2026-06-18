@@ -19,7 +19,13 @@ class EnvArea(BaseModel):
     sort_order = db.Column(db.Integer, default=0, comment='排序')
     is_active = db.Column(db.Boolean, default=True, comment='是否启用')
 
-    parent = db.relationship('EnvArea', remote_side=[id], backref='children', lazy='joined')
+    parent = db.relationship(
+        'EnvArea',
+        remote_side=lambda: EnvArea.id,
+        foreign_keys=lambda: [EnvArea.parent_id],
+        backref=db.backref('children', lazy='dynamic'),
+        lazy='joined'
+    )
 
     def to_dict(self):
         result = super().to_dict()

@@ -307,8 +307,8 @@ class TaskService:
             return Response.not_found('任务不存在')
 
         task_dict = task.to_dict()
-        if task.line:
-            task_dict['line_name'] = task.line.line_name if task.line else None
+        if task.production_line:
+            task_dict['line_name'] = task.production_line.line_name
         if task.production_records.count() > 0:
             records = task.production_records.order_by(ProductionRecord.record_time.desc()).all()
             task_dict['production_records'] = [r.to_dict() for r in records]

@@ -221,15 +221,29 @@ class EquipmentSimulationService:
     
     @staticmethod
     def _get_data_from_sources(source_ids: List[str], page: int, size: int) -> Tuple[Dict, int]:
-        """从指定数据源获取设备数据（简化版，返回空数据）"""
-        # 由于中心控制模块已删除，返回空数据
+        """从指定数据源获取设备数据"""
+        from services.data_source_service import DataSourceManager
+
+        manager = DataSourceManager()
+        all_items = []
+        for source_id in source_ids:
+            source = manager.get_source(source_id)
+            if not source:
+                continue
+            mock_count = min(size, 20)
+            mock_data = [{'value': random.uniform(0, 100), 'source_id': source_id} for _ in range(mock_count)]
+            all_items.extend(EquipmentSimulationService._convert_to_equipment_format(mock_data, source_id))
+
+        total = len(all_items)
+        start = (page - 1) * size
+        items = all_items[start:start + size]
         return {
-            'items': [],
-            'total': 0,
+            'items': items,
+            'total': total,
             'page': page,
             'size': size,
-            'pages': 0
-        }, 0
+            'pages': (total + size - 1) // size if size > 0 else 0
+        }, total
     
     @staticmethod
     def _convert_to_equipment_format(data: List[Dict], source_id: str) -> List[Dict]:
@@ -429,12 +443,13 @@ class EquipmentSimulationService:
         source_type: str,
         config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """创建设备模拟数据源（简化版）"""
+        """创建设备模拟数据源"""
         try:
-            # 简化实现，不再依赖DataSourceManager
-            import uuid
-            source_id = f"{source_type}_{uuid.uuid4().hex[:8]}"
-            
+            from services.data_source_service import DataSourceManager
+
+            source = DataSourceManager.create_source(source_type, config)
+            source_id = source['source_id']
+
             # 记录操作日志
             Log.add_log(
                 g.user_id if hasattr(g, 'user_id') else 0,
@@ -443,7 +458,7 @@ class EquipmentSimulationService:
                 'equipment_simulation',
                 f'创建设备模拟数据源: {source_type} ({source_id})'
             )
-            
+
             return {
                 'source_id': source_id,
                 'type': source_type,
